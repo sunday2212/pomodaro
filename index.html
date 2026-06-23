@@ -4,91 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thus spoke the cadaver</title>
-    <!-- Importing fonts for the script title and serif poem text -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-color: #fafafa; /* Slightly off-white like paper */
+            /* Using the exact off-white from the original image */
+            --bg-color: #fdfcfc; 
             --maroon: #800000;
-            --text-grey: #444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
         }
 
         body {
-            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0; /* Outer background */
             font-family: 'Playfair Display', serif;
-            color: var(--text-grey);
-            line-height: 1.4;
-            padding: 20px;
-        }
-
-        /* Container to center the layout on large screens */
-        .page-wrapper {
-            max-width: 1100px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* Top Bar & Header Section */
-        header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 40px;
-        }
-
-        .red-bar {
-            background-color: var(--maroon);
-            width: 25%;
-            height: 50px;
-        }
-
-        .main-title {
-            font-family: 'Great Vibes', cursive;
-            color: var(--maroon);
-            font-size: clamp(2rem, 5vw, 3.5rem); /* Responsive font size */
-            margin-left: 5%;
-            font-weight: 400;
-        }
-
-        /* Main Content Layout */
-        .content-grid {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: flex-start;
-        }
-
-        /* Left Side: Image */
-        .image-container {
-            flex: 1;
-            min-width: 300px;
-            padding-top: 50px; /* Aligns head with the middle of poem */
             display: flex;
             justify-content: center;
         }
 
-        .cadaver-img {
-            max-width: 100%;
-            height: auto;
-            /* Added a subtle filter to match the vintage feel if the crop is harsh */
-            filter: grayscale(10%) contrast(1.1);
+        .page-canvas {
+            width: 100%;
+            max-width: 1000px;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            position: relative;
+            padding: 40px 0;
+            overflow: hidden; /* Keeps the skeleton inside the page bounds */
         }
 
-        /* Right Side: Poem Text */
-        .poem-container {
-            flex: 1.2;
-            min-width: 350px;
+        /* Header Layout */
+        .header-area {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .red-accent {
+            background-color: var(--maroon);
+            width: 30%;
+            height: 50px;
+        }
+
+        .title-text {
+            font-family: 'Great Vibes', cursive;
+            color: var(--maroon);
+            font-size: 52px;
+            margin-left: 100px;
+            font-weight: 400;
+        }
+
+        /* Content Container */
+        .content-container {
+            position: relative;
+            display: flex;
+            justify-content: flex-end; /* Pushes text to the right */
+            padding-right: 80px;
+            padding-top: 50px;
+        }
+
+        /* The Poem Column */
+        .poem-column {
+            width: 50%;
             text-align: center;
-            padding: 20px;
             font-style: italic;
-            font-size: 1.15rem;
+            font-size: 19px;
+            color: #333;
+            z-index: 2; /* Ensures text is above image if they overlap */
         }
 
         .stanza {
@@ -96,76 +77,75 @@
         }
 
         .stanza p {
-            margin-bottom: 4px;
+            margin: 4px 0;
         }
 
-        .author {
+        .signature {
             text-align: right;
-            padding-right: 15%;
-            margin-top: 20px;
+            margin-top: 30px;
+            padding-right: 20px;
             font-style: normal;
             font-weight: bold;
         }
 
-        /* RESPONSIVENESS */
-
-        /* Tablet View (iPad etc) */
-        @media (max-width: 992px) {
-            .red-bar { width: 15%; }
-            .poem-container { flex: 1.5; }
+        /* THE SKELETON - POSITIONED AT BOTTOM LEFT */
+        .cadaver-wrapper {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            width: 350px;
         }
 
-        /* Mobile View (iPhone, Android) */
-        @media (max-width: 768px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
+        .cadaver-img {
+            width: 100%;
+            height: auto;
+            /* MAGIC FIX: This removes the image background and blends it with the page */
+            mix-blend-mode: multiply; 
+            display: block;
+        }
+
+        /* RESPONSIVENESS for Phones & Tablets */
+        @media (max-width: 850px) {
+            .header-area { flex-direction: column; align-items: flex-start; }
+            .red-accent { width: 100%; height: 15px; }
+            .title-text { margin-left: 20px; font-size: 38px; margin-top: 10px; }
+            
+            .content-container { 
+                flex-direction: column; 
+                align-items: center; 
+                padding-right: 0;
             }
-            .red-bar {
-                width: 100%;
-                height: 15px;
-                margin-bottom: 10px;
-            }
-            .main-title {
-                margin-left: 0;
-                text-align: center;
-                width: 100%;
-            }
-            .content-grid {
-                flex-direction: column;
-                align-items: center;
-            }
-            .image-container {
-                order: 2; /* Move image below poem or keep 1 for above */
-                padding-top: 20px;
-                width: 80%;
-            }
-            .poem-container {
-                width: 100%;
-                font-size: 1rem;
-            }
-            .author {
-                padding-right: 5%;
+            .poem-column { width: 90%; }
+            
+            .cadaver-wrapper {
+                position: relative; /* Stacks it below text on small screens */
+                bottom: 0;
+                left: 0;
+                margin: 40px auto;
+                width: 250px;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="page-wrapper">
-        <header>
-            <div class="red-bar"></div>
-            <h1 class="main-title">Thus spoke the cadaver</h1>
-        </header>
+    <div class="page-canvas">
+        
+        <!-- Top Maroon Bar and Title -->
+        <div class="header-area">
+            <div class="red-accent"></div>
+            <h1 class="title-text">Thus spoke the cadaver</h1>
+        </div>
 
-        <main class="content-grid">
-            <!-- LEFT SECTION -->
-            <div class="image-container">
-                <img src="cadaver.jpg" alt="Kneeling Skeleton Illustration" class="cadaver-img">
+        <div class="content-container">
+            
+            <!-- Skeleton positioned in the background/left -->
+            <div class="cadaver-wrapper">
+                <img src="cadaver.jpg" alt="Skeleton" class="cadaver-img">
             </div>
 
-            <!-- RIGHT SECTION -->
-            <div class="poem-container">
+            <!-- Poem Section -->
+            <div class="poem-column">
                 <div class="stanza">
                     <p>Handle me with little love and care</p>
                     <p>As I had missed it in my life affair</p>
@@ -217,9 +197,10 @@
                     <p>And I bet, you'd be singularly happy</p>
                 </div>
 
-                <p class="author">—Krishna Garg</p>
+                <div class="signature">—Krishna Garg</div>
             </div>
-        </main>
+        </div>
+
     </div>
 
 </body>
