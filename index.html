@@ -8,15 +8,15 @@
     
     <style>
         :root {
-            /* Using the exact off-white from the original image */
-            --bg-color: #fdfcfc; 
+            /* Matches the clean page color from your screenshot */
+            --page-bg: #ffffff; 
             --maroon: #800000;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0; /* Outer background */
+            background-color: #f4f4f4; /* Outer area */
             font-family: 'Playfair Display', serif;
             display: flex;
             justify-content: center;
@@ -24,105 +24,108 @@
 
         .page-canvas {
             width: 100%;
-            max-width: 1000px;
+            max-width: 1100px;
             min-height: 100vh;
-            background-color: var(--bg-color);
+            background-color: var(--page-bg);
             position: relative;
             padding: 40px 0;
-            overflow: hidden; /* Keeps the skeleton inside the page bounds */
+            overflow: hidden;
         }
 
-        /* Header Layout */
+        /* Top Header */
         .header-area {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         .red-accent {
             background-color: var(--maroon);
-            width: 30%;
+            width: 300px;
             height: 50px;
         }
 
         .title-text {
             font-family: 'Great Vibes', cursive;
             color: var(--maroon);
-            font-size: 52px;
-            margin-left: 100px;
+            font-size: clamp(30px, 5vw, 52px);
+            margin-left: 10%;
             font-weight: 400;
         }
 
-        /* Content Container */
+        /* Layout Container */
         .content-container {
             position: relative;
             display: flex;
-            justify-content: flex-end; /* Pushes text to the right */
-            padding-right: 80px;
-            padding-top: 50px;
+            justify-content: flex-end;
+            padding-right: 5%;
+            padding-top: 20px;
         }
 
-        /* The Poem Column */
+        /* Poem Text Area */
         .poem-column {
-            width: 50%;
+            width: 550px;
+            max-width: 90%;
             text-align: center;
             font-style: italic;
             font-size: 19px;
+            line-height: 1.5;
             color: #333;
-            z-index: 2; /* Ensures text is above image if they overlap */
+            padding: 20px;
+            z-index: 2;
         }
 
-        .stanza {
-            margin-bottom: 30px;
-        }
-
-        .stanza p {
-            margin: 4px 0;
-        }
-
+        .stanza { margin-bottom: 30px; }
+        .stanza p { margin: 4px 0; }
         .signature {
             text-align: right;
             margin-top: 30px;
-            padding-right: 20px;
             font-style: normal;
             font-weight: bold;
         }
 
-        /* THE SKELETON - POSITIONED AT BOTTOM LEFT */
+        /* SKELETON POSITION & BLENDING FIX */
         .cadaver-wrapper {
             position: absolute;
-            bottom: 40px;
-            left: 40px;
-            width: 350px;
+            /* Positioning to match the original image exactly */
+            bottom: 50px;
+            left: 20px; 
+            width: 400px;
+            pointer-events: none; /* Allows clicking through image to text if they overlap */
         }
 
         .cadaver-img {
             width: 100%;
             height: auto;
-            /* MAGIC FIX: This removes the image background and blends it with the page */
-            mix-blend-mode: multiply; 
             display: block;
+            
+            /* FIX: mix-blend-mode removes pure white. 
+               The filters below force the image's background to become pure white 
+               so that 'multiply' can make it 100% transparent. */
+            mix-blend-mode: multiply;
+            filter: contrast(1.1) brightness(1.05); 
         }
 
-        /* RESPONSIVENESS for Phones & Tablets */
+        /* Mobile Responsive */
         @media (max-width: 850px) {
             .header-area { flex-direction: column; align-items: flex-start; }
             .red-accent { width: 100%; height: 15px; }
-            .title-text { margin-left: 20px; font-size: 38px; margin-top: 10px; }
+            .title-text { margin-left: 20px; margin-top: 10px; }
             
             .content-container { 
                 flex-direction: column; 
                 align-items: center; 
                 padding-right: 0;
             }
-            .poem-column { width: 90%; }
+            .poem-column { width: 95%; font-size: 17px; }
             
             .cadaver-wrapper {
-                position: relative; /* Stacks it below text on small screens */
+                position: relative;
                 bottom: 0;
                 left: 0;
-                margin: 40px auto;
-                width: 250px;
+                margin: 20px auto;
+                width: 80%;
+                max-width: 320px;
             }
         }
     </style>
@@ -131,7 +134,6 @@
 
     <div class="page-canvas">
         
-        <!-- Top Maroon Bar and Title -->
         <div class="header-area">
             <div class="red-accent"></div>
             <h1 class="title-text">Thus spoke the cadaver</h1>
@@ -139,12 +141,12 @@
 
         <div class="content-container">
             
-            <!-- Skeleton positioned in the background/left -->
+            <!-- SKELETON FIGURE -->
             <div class="cadaver-wrapper">
-                <img src="cadaver.jpg" alt="Skeleton" class="cadaver-img">
+                <img src="cadaver.jpg" alt="Skeleton Figure" class="cadaver-img">
             </div>
 
-            <!-- Poem Section -->
+            <!-- POEM TEXT -->
             <div class="poem-column">
                 <div class="stanza">
                     <p>Handle me with little love and care</p>
