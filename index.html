@@ -5,34 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HTML5 Video Player</title>
     <style>
-        /* Style only the progress bar's thumb and track – leave everything else as-is */
+        video {
+            accent-color: #ff0000; /* controls the played bar + dot color in Chromium browsers */
+        }
+
+        /* Extra targeting for Chrome/Edge/Safari native controls */
         video::-webkit-media-controls-timeline {
-            background: rgba(255, 0, 0, 0.3); /* light red track */
-        }
-        video::-webkit-media-controls-timeline::-webkit-slider-thumb {
-            background: #ff0000; /* red thumb (dot) */
-            border-color: #ff0000;
-        }
-        /* Firefox */
-        video::-moz-range-track {
-            background: rgba(255, 0, 0, 0.3);
-        }
-        video::-moz-range-thumb {
-            background: #ff0000;
-            border-color: #ff0000;
-        }
-        /* For the filled progress (WebKit) – some browsers use this */
-        video::-webkit-media-controls-timeline {
-            color: #ff0000;
-        }
-        /* Additional fallback for newer WebKit */
-        video::-webkit-media-controls-timeline {
-            background: rgba(255, 0, 0, 0.3);
-        }
-        video::-webkit-media-controls-timeline::-webkit-slider-thumb {
-            background: #ff0000;
-            border: 2px solid #ff0000;
-            border-radius: 50%;
+            accent-color: #ff0000;
         }
     </style>
 </head>
