@@ -40,7 +40,11 @@
             padding-top: 56.25%;
             /* 16:9 */
             background: #000;
-            cursor: pointer;
+            cursor: default;
+            /* Disable default tap highlight */
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            user-select: none;
         }
 
         .video-container video {
@@ -51,6 +55,11 @@
             height: 100%;
             display: block;
             background: #000;
+            /* Remove blue flash on click */
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            pointer-events: none;
+            /* Video itself doesn't capture clicks, container handles it */
         }
 
         /* ── Controls Overlay ── */
@@ -67,6 +76,13 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            pointer-events: none;
+            /* Allow clicks to pass through except on interactive children */
+        }
+
+        .controls>* {
+            pointer-events: auto;
+            /* Children capture clicks */;
         }
 
         .video-container:hover .controls,
@@ -83,6 +99,7 @@
             position: relative;
             cursor: pointer;
             transition: height 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .progress-bar:hover {
@@ -165,6 +182,8 @@
             cursor: pointer;
             transition: background 0.2s ease;
             flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         .ctrl-btn:hover {
@@ -230,6 +249,7 @@
             width: 100%;
             height: 4px;
             -webkit-appearance: none;
+            appearance: none;
             background: rgba(255, 255, 255, 0.25);
             border-radius: 4px;
             outline: none;
@@ -238,6 +258,7 @@
 
         .volume-slider input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
+            appearance: none;
             width: 12px;
             height: 12px;
             background: #ff0000;
@@ -280,6 +301,8 @@
             transition: background 0.25s ease, transform 0.2s ease;
             opacity: 0;
             pointer-events: none;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         .big-play.show {
@@ -307,6 +330,7 @@
             transform: translate(-50%, -50%);
             z-index: 4;
             display: none;
+            pointer-events: none;
         }
 
         .spinner.show {
@@ -323,6 +347,78 @@
             to {
                 transform: rotate(360deg);
             }
+        }
+
+        /* ── Seek Feedback Toast ── */
+        .seek-toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            color: #fff;
+            font-size: 28px;
+            font-weight: 500;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 28px;
+            border-radius: 8px;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 0.15s ease, transform 0.2s ease;
+            pointer-events: none;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .seek-toast.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .seek-toast.rewind {
+            color: #ffcc00;
+        }
+        .seek-toast.forward {
+            color: #00ccff;
+        }
+
+        /* ── Click zone hints (subtle, only on hover) ── */
+        .video-container .zone-hint {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            z-index: 3;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 48px;
+            font-weight: 300;
+        }
+
+        .video-container:hover .zone-hint {
+            opacity: 1;
+        }
+
+        .zone-hint.left-hint {
+            left: 0;
+            width: 33%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.04), transparent);
+        }
+
+        .zone-hint.right-hint {
+            right: 0;
+            width: 33%;
+            background: linear-gradient(to left, rgba(255, 255, 255, 0.04), transparent);
+        }
+
+        .zone-hint .arrow {
+            font-size: 36px;
+            opacity: 0.4;
         }
 
         /* ── Responsive ── */
@@ -359,6 +455,13 @@
             .big-play svg {
                 width: 28px;
                 height: 28px;
+            }
+            .seek-toast {
+                font-size: 20px;
+                padding: 8px 18px;
+            }
+            .zone-hint .arrow {
+                font-size: 24px;
             }
         }
 
@@ -421,6 +524,13 @@
                     <polygon points="5,3 19,12 5,21" />
                 </svg>
             </div>
+
+            <!-- Seek Toast -->
+            <div class="seek-toast" id="seekToast"></div>
+
+            <!-- Click zone hints (visual only) -->
+            <div class="zone-hint left-hint"><span class="arrow">⏪</span></div>
+            <div class="zone-hint right-hint"><span class="arrow">⏩</span></div>
 
             <!-- Controls -->
             <div class="controls" id="controls">
@@ -499,6 +609,7 @@
             const volSliderWrap = document.getElementById('volSliderWrap');
             const fullscreenBtn = document.getElementById('fullscreenBtn');
             const spinner = document.getElementById('spinner');
+            const seekToast = document.getElementById('seekToast');
 
             // ── State ──
             let isPlaying = false;
@@ -507,6 +618,7 @@
             let isControlsVisible = true;
             let isDragging = false;
             let wasPlayingBeforeDrag = false;
+            let toastTimeout = null;
 
             // ── Helpers ──
             function formatTime(seconds) {
@@ -539,11 +651,14 @@
             function updateVolumeIcon() {
                 const svg = volBtn.querySelector('svg');
                 if (isMuted || video.volume === 0) {
-                    svg.innerHTML = '<path d="M3,9v6h4l5,5V4L7,9H3z" /><path d="M19,11h-2v2h2V11z M19,7h-2v2h2V7z M19,15h-2v2h2V15z" />';
+                    svg.innerHTML =
+                        '<path d="M3,9v6h4l5,5V4L7,9H3z" /><path d="M19,11h-2v2h2V11z M19,7h-2v2h2V7z M19,15h-2v2h2V15z" />';
                 } else if (video.volume < 0.5) {
-                    svg.innerHTML = '<path d="M3,9v6h4l5,5V4L7,9H3z" /><path d="M16.5,12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-0.73,2.5-2.25,2.5-4.02z" />';
+                    svg.innerHTML =
+                        '<path d="M3,9v6h4l5,5V4L7,9H3z" /><path d="M16.5,12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-0.73,2.5-2.25,2.5-4.02z" />';
                 } else {
-                    svg.innerHTML = '<path d="M3,9v6h4l5,5V4L7,9H3z" /><path d="M16.5,12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-0.73,2.5-2.25,2.5-4.02z" /><path d="M19.5,12c0-3.04-1.64-5.67-4-7.08v14.16c2.36-1.41,4-4.04,4-7.08z" />';
+                    svg.innerHTML =
+                        '<path d="M3,9v6h4l5,5V4L7,9H3z" /><path d="M16.5,12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-0.73,2.5-2.25,2.5-4.02z" /><path d="M19.5,12c0-3.04-1.64-5.67-4-7.08v14.16c2.36-1.41,4-4.04,4-7.08z" />';
                 }
             }
 
@@ -586,9 +701,33 @@
                 }
             }
 
+            // ── Seek Toast ──
+            function showSeekToast(text, isRewind) {
+                if (toastTimeout) {
+                    clearTimeout(toastTimeout);
+                    toastTimeout = null;
+                }
+                seekToast.textContent = text;
+                seekToast.className = 'seek-toast show ' + (isRewind ? 'rewind' : 'forward');
+                toastTimeout = setTimeout(() => {
+                    seekToast.className = 'seek-toast';
+                    toastTimeout = null;
+                }, 800);
+            }
+
+            // ── Seek logic ──
+            function seekBy(seconds) {
+                if (!video.duration || isNaN(video.duration)) return;
+                const newTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
+                video.currentTime = newTime;
+                const isRewind = seconds < 0;
+                showSeekToast((isRewind ? '' : '+') + Math.abs(seconds) + 's', isRewind);
+                showControls(true);
+            }
+
             // ── Event Listeners ──
 
-            // Play / Pause
+            // Play / Pause (buttons)
             playBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 togglePlay();
@@ -599,10 +738,7 @@
                 togglePlay();
             });
 
-            video.addEventListener('click', () => {
-                togglePlay();
-            });
-
+            // Video state
             video.addEventListener('play', () => {
                 isPlaying = true;
                 updatePlayIcon();
@@ -639,8 +775,37 @@
                 spinner.classList.remove('show');
             });
 
-            // Progress bar seeking
+            // ── Container click: forward / backward zones ──
+            container.addEventListener('click', (e) => {
+                // Ignore clicks on controls, big play button (has stopPropagation), and progress bar
+                if (e.target.closest('.controls')) return;
+                if (e.target.closest('.big-play')) return;
+                if (e.target.closest('.progress-bar')) return;
+
+                // Get click position relative to container width
+                const rect = container.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+
+                // Left third: rewind 10s
+                if (x < 0.33) {
+                    seekBy(-10);
+                }
+                // Right third: forward 10s
+                else if (x > 0.67) {
+                    seekBy(10);
+                }
+                // Middle third: do nothing (big play button handles play/pause when visible)
+                else {
+                    // If video is paused and big play is visible, the big play handles it.
+                    // If video is playing, clicking center does nothing.
+                    // But we still show controls briefly.
+                    showControls(true);
+                }
+            });
+
+            // ── Progress bar seeking (mouse) ──
             progressBar.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
                 isDragging = true;
                 wasPlayingBeforeDrag = !video.paused;
                 video.pause();
@@ -671,9 +836,10 @@
                 }
             });
 
-            // Touch support for progress bar
+            // ── Progress bar seeking (touch) ──
             progressBar.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 isDragging = true;
                 wasPlayingBeforeDrag = !video.paused;
                 video.pause();
@@ -683,7 +849,7 @@
                 video.currentTime = x * video.duration;
                 updateProgress();
                 showControls(true);
-            });
+            }, { passive: false });
 
             progressBar.addEventListener('touchmove', (e) => {
                 e.preventDefault();
@@ -695,7 +861,7 @@
                     video.currentTime = x * video.duration;
                     updateProgress();
                 }
-            });
+            }, { passive: false });
 
             progressBar.addEventListener('touchend', (e) => {
                 e.preventDefault();
@@ -706,9 +872,9 @@
                     }
                     showControls(false);
                 }
-            });
+            }, { passive: false });
 
-            // Volume
+            // ── Volume ──
             volBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (isMuted) {
@@ -745,8 +911,9 @@
                 volSliderWrap.classList.remove('open');
             });
 
-            // Fullscreen
-            fullscreenBtn.addEventListener('click', () => {
+            // ── Fullscreen ──
+            fullscreenBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (!document.fullscreenElement) {
                     container.requestFullscreen?.() ||
                         container.webkitRequestFullscreen?.() ||
@@ -776,7 +943,7 @@
                 }
             }
 
-            // Keyboard shortcuts
+            // ── Keyboard shortcuts ──
             document.addEventListener('keydown', (e) => {
                 const tag = e.target.tagName;
                 if (tag === 'INPUT') return;
@@ -789,13 +956,11 @@
                         break;
                     case 'ArrowRight':
                         e.preventDefault();
-                        video.currentTime = Math.min(video.currentTime + 5, video.duration);
-                        showControls(true);
+                        seekBy(10);
                         break;
                     case 'ArrowLeft':
                         e.preventDefault();
-                        video.currentTime = Math.max(video.currentTime - 5, 0);
-                        showControls(true);
+                        seekBy(-10);
                         break;
                     case 'f':
                         fullscreenBtn.click();
@@ -806,7 +971,7 @@
                 }
             });
 
-            // Show controls on hover / movement
+            // ── Show controls on hover / movement ──
             container.addEventListener('mousemove', () => {
                 showControls(false);
             });
@@ -815,11 +980,14 @@
                 hideControls();
             });
 
-            // Touch: show controls on tap, hide after timeout
+            // ── Touch: show controls on tap, hide after timeout ──
             let touchTimeout = null;
             container.addEventListener('touchstart', (e) => {
-                // Don't interfere with progress bar touch
+                // Ignore if touching controls or progress bar
+                if (e.target.closest('.controls')) return;
                 if (e.target.closest('.progress-bar')) return;
+                if (e.target.closest('.big-play')) return;
+
                 if (touchTimeout) {
                     clearTimeout(touchTimeout);
                     touchTimeout = null;
@@ -837,7 +1005,7 @@
                 }
             });
 
-            // Init
+            // ── Init ──
             updatePlayIcon();
             updateVolumeIcon();
             updateProgress();
@@ -852,6 +1020,11 @@
 
             // If video is paused, keep controls visible
             video.addEventListener('pause', () => {
+                showControls(true);
+            });
+
+            // Also ensure that when video ends, controls show
+            video.addEventListener('ended', () => {
                 showControls(true);
             });
 
