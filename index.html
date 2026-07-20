@@ -45,6 +45,7 @@
             -webkit-touch-callout: none;
             user-select: none;
             touch-action: manipulation;
+            overflow: hidden;
         }
 
         .video-container video {
@@ -294,7 +295,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            z-index: 5;
+            z-index: 8;
             transition: opacity 0.25s ease, transform 0.2s ease, background 0.2s ease;
             opacity: 0;
             pointer-events: none;
@@ -373,41 +374,102 @@
             }
         }
 
-        /* ── Seek Toast ── */
-        .seek-toast {
+        /* ── Double-tap Seek Flash (light, video.js style) ── */
+        .seek-flash {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.7);
-            color: #fff;
-            font-size: 30px;
-            font-weight: 500;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 14px 32px;
-            border-radius: 10px;
-            z-index: 6;
-            opacity: 0;
-            transition: opacity 0.15s ease, transform 0.2s ease;
+            top: 0;
+            bottom: 0;
+            width: 42%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            z-index: 7;
             pointer-events: none;
-            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-            letter-spacing: 0.5px;
-            backdrop-filter: blur(6px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            font-variant-numeric: tabular-nums;
-            min-width: 80px;
-            text-align: center;
+            opacity: 0;
         }
 
-        .seek-toast.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
+        .seek-flash.left {
+            left: 0;
         }
 
-        .seek-toast.rewind {
-            color: #ffcc00;
+        .seek-flash.right {
+            right: 0;
         }
-        .seek-toast.forward {
-            color: #00ccff;
+
+        .seek-flash .circle {
+            position: absolute;
+            width: 88px;
+            height: 88px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.14);
+            transform: scale(0.4);
+            opacity: 0;
+        }
+
+        .seek-flash .icon-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .seek-flash svg {
+            width: 30px;
+            height: 30px;
+            fill: #fff;
+            opacity: 0.95;
+        }
+
+        .seek-flash .seek-flash-label {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .seek-flash.show {
+            animation: seekFlashFade 0.7s ease;
+        }
+
+        .seek-flash.show .circle {
+            animation: seekCircleGrow 0.7s ease;
+        }
+
+        @keyframes seekFlashFade {
+            0% {
+                opacity: 0;
+            }
+
+            12% {
+                opacity: 1;
+            }
+
+            65% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes seekCircleGrow {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.35);
+                opacity: 0;
+            }
         }
 
         /* ── Responsive ── */
@@ -445,10 +507,16 @@
                 width: 28px;
                 height: 28px;
             }
-            .seek-toast {
-                font-size: 22px;
-                padding: 10px 22px;
-                min-width: 60px;
+            .seek-flash .circle {
+                width: 68px;
+                height: 68px;
+            }
+            .seek-flash svg {
+                width: 24px;
+                height: 24px;
+            }
+            .seek-flash .seek-flash-label {
+                font-size: 11px;
             }
         }
 
@@ -513,7 +581,7 @@
             </div>
 
             <!-- Center Play / Pause Button -->
-            <div class="center-btn is-paused" id="centerBtn">
+            <div class="center-btn is-paused show" id="centerBtn">
                 <!-- Play icon (▶) -->
                 <svg class="play-icon" viewBox="0 0 24 24">
                     <polygon points="5,3 19,12 5,21" />
@@ -525,8 +593,21 @@
                 </svg>
             </div>
 
-            <!-- Seek Toast -->
-            <div class="seek-toast" id="seekToast"></div>
+            <!-- Double-tap seek flashes -->
+            <div class="seek-flash left" id="seekFlashLeft">
+                <div class="circle"></div>
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M11.5,12L20,18V6L11.5,12z M4,12L12.5,18V6L4,12z" /></svg>
+                </div>
+                <div class="seek-flash-label"><span class="seek-flash-count">10</span> seconds</div>
+            </div>
+            <div class="seek-flash right" id="seekFlashRight">
+                <div class="circle"></div>
+                <div class="icon-wrap">
+                    <svg viewBox="0 0 24 24"><path d="M12.5,12L4,6v12L12.5,12z M20,12L11.5,6v12L20,12z" /></svg>
+                </div>
+                <div class="seek-flash-label"><span class="seek-flash-count">10</span> seconds</div>
+            </div>
 
             <!-- Controls -->
             <div class="controls" id="controls">
@@ -605,17 +686,20 @@
             const volSliderWrap = document.getElementById('volSliderWrap');
             const fullscreenBtn = document.getElementById('fullscreenBtn');
             const spinner = document.getElementById('spinner');
-            const seekToast = document.getElementById('seekToast');
+            const seekFlashLeft = document.getElementById('seekFlashLeft');
+            const seekFlashRight = document.getElementById('seekFlashRight');
 
             // ── State ──
             let isMuted = false;
             let controlsTimeout = null;
-            let isControlsVisible = false;
+            let isControlsVisible = true; // true initially since video starts paused
             let isDragging = false;
             let wasPlayingBeforeDrag = false;
-            let toastTimeout = null;
             let clickTimer = null;
             let clickCount = 0;
+
+            // Seek accumulation (so rapid double-double-clicks add up, like YouTube)
+            const seekAccum = { left: 0, right: 0, leftTimeout: null, rightTimeout: null };
 
             // ── Helpers ──
             function formatTime(seconds) {
@@ -636,9 +720,11 @@
 
             function updateCenterButton() {
                 if (video.paused) {
-                    centerBtn.className = 'center-btn is-paused';
+                    centerBtn.classList.remove('is-playing');
+                    centerBtn.classList.add('is-paused');
                 } else {
-                    centerBtn.className = 'center-btn is-playing';
+                    centerBtn.classList.remove('is-paused');
+                    centerBtn.classList.add('is-playing');
                 }
             }
 
@@ -681,34 +767,26 @@
                 }
             }
 
-            function showControls(force) {
-                if (force) {
-                    container.classList.add('show-controls');
-                    isControlsVisible = true;
-                } else {
-                    container.classList.add('show-controls');
-                    isControlsVisible = true;
-                    clearTimeout(controlsTimeout);
+            // Show controls bar. If `persist` is true, no auto-hide timer is started
+            // (used while paused, where controls should stay put).
+            function showControls(persist) {
+                container.classList.add('show-controls');
+                isControlsVisible = true;
+                clearTimeout(controlsTimeout);
+                if (!persist) {
                     controlsTimeout = setTimeout(() => {
-                        // Don't hide controls if video is paused or if center button is shown
                         if (!video.paused && !video.ended) {
-                            container.classList.remove('show-controls');
-                            isControlsVisible = false;
-                            // If playing, hide center button when controls hide
-                            if (!video.paused) {
-                                centerBtn.classList.remove('show');
-                            }
+                            hideControls();
                         }
                     }, 3000);
                 }
             }
 
             function hideControls() {
-                if (!video.paused && !video.ended && !isDragging) {
-                    container.classList.remove('show-controls');
-                    isControlsVisible = false;
-                    centerBtn.classList.remove('show');
-                }
+                container.classList.remove('show-controls');
+                isControlsVisible = false;
+                centerBtn.classList.remove('show');
+                clearTimeout(controlsTimeout);
             }
 
             function showCenterBtn(show) {
@@ -719,34 +797,32 @@
                 }
             }
 
-            // ── Seek Toast ──
-            function showSeekToast(text, isRewind) {
-                if (toastTimeout) {
-                    clearTimeout(toastTimeout);
-                    toastTimeout = null;
-                }
-                seekToast.textContent = text;
-                seekToast.className = 'seek-toast show ' + (isRewind ? 'rewind' : 'forward');
-                toastTimeout = setTimeout(() => {
-                    seekToast.className = 'seek-toast';
-                    toastTimeout = null;
-                }, 800);
+            // ── Double-tap seek flash (light, video.js style ripple) ──
+            function showSeekFlash(direction, seconds) {
+                const el = direction === 'left' ? seekFlashLeft : seekFlashRight;
+                const countEl = el.querySelector('.seek-flash-count');
+                const accumKey = direction;
+                const timeoutKey = direction + 'Timeout';
+
+                clearTimeout(seekAccum[timeoutKey]);
+                seekAccum[accumKey] += seconds;
+                countEl.textContent = seekAccum[accumKey];
+
+                seekAccum[timeoutKey] = setTimeout(() => {
+                    seekAccum[accumKey] = 0;
+                }, 750);
+
+                // Restart the CSS animation even if it's already running
+                el.classList.remove('show');
+                // force reflow so the animation restarts cleanly
+                void el.offsetWidth;
+                el.classList.add('show');
             }
 
-            function seekBy(seconds) {
+            function seekVideoBy(seconds) {
                 if (!video.duration || isNaN(video.duration)) return;
                 const newTime = Math.max(0, Math.min(video.duration, video.currentTime + seconds));
                 video.currentTime = newTime;
-                const isRewind = seconds < 0;
-                const label = (isRewind ? '' : '+') + Math.abs(seconds) + 's';
-                showSeekToast(label, isRewind);
-                // Show controls briefly
-                showControls(true);
-                // Keep center button visible if video is playing
-                if (!video.paused) {
-                    showCenterBtn(true);
-                }
-                // Update progress
                 updateProgress();
             }
 
@@ -765,12 +841,10 @@
                 clickCount++;
                 if (clickCount === 1) {
                     clickTimer = setTimeout(() => {
-                        // Single click
                         clickCount = 0;
                         handleSingleClick(x);
                     }, 280);
                 } else if (clickCount >= 2) {
-                    // Double click
                     clearTimeout(clickTimer);
                     clickCount = 0;
                     handleDoubleClick(x);
@@ -778,57 +852,43 @@
             }
 
             function handleSingleClick(x) {
-                // Single click: toggle controls visibility
-                // If video is paused, show center button with play icon
+                // Paused: center button + controls should already be visible; nothing to toggle.
                 if (video.paused || video.ended) {
-                    // If paused, show center button (it's already shown with play icon)
                     showControls(true);
                     showCenterBtn(true);
+                    updateCenterButton();
                     return;
                 }
 
-                // Video is playing: toggle controls
+                // Playing: first tap reveals the center pause button + controls.
+                // A second tap on empty space (while visible) hides everything again.
                 if (isControlsVisible) {
-                    // If controls are visible, hide them
                     hideControls();
-                    showCenterBtn(false);
                 } else {
-                    // Show controls and center button (with pause icon)
-                    showControls(true);
+                    showControls(false);
                     showCenterBtn(true);
-                    // Update center button to show pause icon
                     updateCenterButton();
                 }
             }
 
             function handleDoubleClick(x) {
-                // Double click: seek based on position
-                // Left third: rewind, Right third: forward, Middle: do nothing
-                if (x < 0.33) {
-                    seekBy(-10);
-                } else if (x > 0.67) {
-                    seekBy(10);
-                } else {
-                    // Middle third double-click: toggle controls (like single click)
-                    // But since it's a double click, we'll just show controls briefly
-                    showControls(true);
-                    if (!video.paused) {
-                        showCenterBtn(true);
-                        updateCenterButton();
-                    }
+                // Left zone: rewind. Right zone: forward. Middle: ignored (no seek).
+                if (x < 0.4) {
+                    seekVideoBy(-10);
+                    showSeekFlash('left', 10);
+                } else if (x > 0.6) {
+                    seekVideoBy(10);
+                    showSeekFlash('right', 10);
                 }
             }
 
             // ── Event Listeners ──
 
-            // Container click (single/double detection)
             container.addEventListener('click', handleContainerClick);
 
             // Touch support for double-tap
             let lastTouchTime = 0;
-            let touchX = 0;
             container.addEventListener('touchend', (e) => {
-                // Ignore if touching controls, center button, progress bar
                 if (e.target.closest('.controls')) return;
                 if (e.target.closest('.center-btn')) return;
                 if (e.target.closest('.progress-bar')) return;
@@ -843,47 +903,13 @@
                 if (timeDiff < 300 && timeDiff > 20) {
                     // Double tap
                     lastTouchTime = 0;
-                    // Left/right detection
-                    if (x < 0.33) {
-                        seekBy(-10);
-                    } else if (x > 0.67) {
-                        seekBy(10);
-                    } else {
-                        // Middle: toggle controls
-                        if (video.paused || video.ended) {
-                            showControls(true);
-                            showCenterBtn(true);
-                        } else if (isControlsVisible) {
-                            hideControls();
-                            showCenterBtn(false);
-                        } else {
-                            showControls(true);
-                            showCenterBtn(true);
-                            updateCenterButton();
-                        }
-                    }
+                    handleDoubleClick(x);
                 } else {
-                    // Single tap - store for potential double
                     lastTouchTime = now;
-                    touchX = x;
-                    // Don't act immediately, wait to see if double tap follows
                     setTimeout(() => {
                         if (lastTouchTime === now) {
-                            // It was a single tap
                             lastTouchTime = 0;
-                            // Single tap: toggle controls
-                            if (video.paused || video.ended) {
-                                showControls(true);
-                                showCenterBtn(true);
-                            } else if (isControlsVisible) {
-                                // If controls visible, hide them on tap
-                                hideControls();
-                                showCenterBtn(false);
-                            } else {
-                                showControls(true);
-                                showCenterBtn(true);
-                                updateCenterButton();
-                            }
+                            handleSingleClick(x);
                         }
                     }, 300);
                 }
@@ -892,45 +918,25 @@
             // ── Center button ──
             centerBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                // Toggle play/pause
                 togglePlay();
-                // If video was paused and now playing, hide center button after a moment
-                if (!video.paused) {
-                    // Center button will be updated via 'play' event
-                    showControls(false);
-                    // Keep center button visible briefly, then it will hide with controls
-                } else {
-                    // Paused: show center button with play icon
-                    showControls(true);
-                    showCenterBtn(true);
-                    updateCenterButton();
-                }
             });
 
-            // Center button touch
             centerBtn.addEventListener('touchstart', (e) => {
                 e.stopPropagation();
-                // Prevent double-tap from triggering on center button
             }, { passive: true });
 
             // ── Video events ──
             video.addEventListener('play', () => {
                 updatePlayIcon();
                 updateCenterButton();
-                // Hide center button after a short delay (controls will auto-hide)
-                setTimeout(() => {
-                    if (!video.paused) {
-                        showCenterBtn(false);
-                        // Start the auto-hide timer for controls
-                        showControls(false);
-                    }
-                }, 400);
+                // While playing, show nothing but the video itself.
+                hideControls();
             });
 
             video.addEventListener('pause', () => {
                 updatePlayIcon();
                 updateCenterButton();
-                // When paused, show center button with play icon and keep controls visible
+                // While paused, keep the center play button and controls visible.
                 showControls(true);
                 showCenterBtn(true);
             });
@@ -940,8 +946,6 @@
                 updateCenterButton();
                 showControls(true);
                 showCenterBtn(true);
-                // Show replay icon (play button)
-                centerBtn.className = 'center-btn is-paused';
             });
 
             // Time updates
@@ -953,7 +957,6 @@
             video.addEventListener('loadedmetadata', () => {
                 durationEl.textContent = formatTime(video.duration);
                 updateProgress();
-                // Show center button initially
                 showControls(true);
                 showCenterBtn(true);
             });
@@ -1002,7 +1005,6 @@
                     if (wasPlayingBeforeDrag) {
                         video.play();
                     } else {
-                        // If it was paused, keep it paused and show center button
                         showControls(true);
                         showCenterBtn(true);
                         updateCenterButton();
@@ -1082,7 +1084,6 @@
                 updateVolumeIcon();
             });
 
-            // Volume slider hover toggle
             volBtn.addEventListener('mouseenter', () => {
                 volSliderWrap.classList.add('open');
             });
@@ -1135,11 +1136,13 @@
                         break;
                     case 'ArrowRight':
                         e.preventDefault();
-                        seekBy(10);
+                        seekVideoBy(10);
+                        showSeekFlash('right', 10);
                         break;
                     case 'ArrowLeft':
                         e.preventDefault();
-                        seekBy(-10);
+                        seekVideoBy(-10);
+                        showSeekFlash('left', 10);
                         break;
                     case 'f':
                         fullscreenBtn.click();
@@ -1150,22 +1153,18 @@
                 }
             });
 
-            // ── Mouse movement to show controls ──
+            // ── Mouse movement to show controls while playing ──
             container.addEventListener('mousemove', () => {
-                if (!video.paused && !video.ended) {
+                if (!video.paused && !video.ended && isControlsVisible) {
+                    // Refresh the auto-hide timer while controls are visible and the
+                    // mouse is moving, but don't force them to reappear from a hover.
                     showControls(false);
-                    // Show center button briefly when moving mouse
-                    if (isControlsVisible) {
-                        showCenterBtn(true);
-                        updateCenterButton();
-                    }
                 }
             });
 
             container.addEventListener('mouseleave', () => {
                 if (!video.paused && !video.ended) {
                     hideControls();
-                    showCenterBtn(false);
                 }
             });
 
@@ -1174,27 +1173,15 @@
             updateVolumeIcon();
             updateProgress();
 
-            // Show controls and center button initially
+            // Video starts paused: center play button and controls are visible by default.
             showControls(true);
             showCenterBtn(true);
 
-            // If video autoplays, hide center button after a moment
-            if (!video.paused) {
-                setTimeout(() => {
-                    showCenterBtn(false);
-                    showControls(false);
-                }, 1000);
-            }
-
             // ── Handle visibility when tab changes ──
             document.addEventListener('visibilitychange', () => {
-                if (document.hidden) {
-                    // Tab hidden: do nothing
-                } else {
-                    // Tab visible: if video is playing, controls should be hidden
+                if (!document.hidden) {
                     if (!video.paused && !video.ended) {
                         hideControls();
-                        showCenterBtn(false);
                     } else if (video.paused) {
                         showControls(true);
                         showCenterBtn(true);
