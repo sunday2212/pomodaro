@@ -5,20 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HTML5 Video Player</title>
     <style>
-        video {
-            accent-color: #ff0000; /* controls the played bar + dot color in Chromium browsers */
+        .video-wrapper {
+            max-width: 960px;
+            margin: 40px auto;
+            position: relative;
         }
-
-        /* Extra targeting for Chrome/Edge/Safari native controls */
-        video::-webkit-media-controls-timeline {
-            accent-color: #ff0000;
+        video {
+            width: 100%;
+            display: block;
+        }
+        /* Custom progress bar */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            position: relative;
+        }
+        .progress-played {
+            height: 100%;
+            background: #ff0000; /* red played line */
+            width: 0%;
+            position: relative;
+        }
+        .progress-dot {
+            width: 14px;
+            height: 14px;
+            background: #ff0000; /* red dot */
+            border-radius: 50%;
+            position: absolute;
+            right: -7px;
+            top: 50%;
+            transform: translateY(-50%);
         }
     </style>
 </head>
 <body>
-    <video controls width="100%" style="max-width: 960px; display: block; margin: 40px auto;">
-        <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-    </video>
+    <div class="video-wrapper">
+        <video id="myVideo" width="100%">
+            <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-played" id="progressPlayed">
+                <div class="progress-dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('myVideo');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressPlayed = document.getElementById('progressPlayed');
+
+        // Update red bar as video plays
+        video.addEventListener('timeupdate', () => {
+            const percent = (video.currentTime / video.duration) * 100;
+            progressPlayed.style.width = percent + '%';
+        });
+
+        // Click/tap on bar to seek
+        progressContainer.addEventListener('click', (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percent = clickX / rect.width;
+            video.currentTime = percent * video.duration;
+        });
+
+        // Toggle play/pause when tapping the video itself
+        video.addEventListener('click', () => {
+            video.paused ? video.play() : video.pause();
+        });
+    </script>
 </body>
 </html>
