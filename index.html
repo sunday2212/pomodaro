@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Video Player - Settings Fixed</title>
+  <title>Pro Video Player - Refined Speed UI</title>
   <style>
     :root {
-      --progress-fill: #ff5722; /* Orange */
-      --progress-dot: #ff0000;  /* Red */
+      --progress-fill: #ff5722; 
+      --progress-dot: #ff0000;  
       --speed-bg: rgba(28, 28, 28, 0.98);
       --font: system-ui, -apple-system, sans-serif;
     }
@@ -41,13 +41,14 @@
 
     video { width: 100%; height: 100%; display: block; cursor: pointer; }
 
-    /* TOP RIGHT SETTINGS - Clean, no shadow */
+    /* SETTINGS BUTTON */
     .settings-btn {
       position: absolute; top: 15px; right: 15px; z-index: 20;
       background: none; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
 
+    /* SETTINGS MENU CONTAINER */
     .settings-menu {
       position: absolute; top: 55px; right: 15px;
       background: var(--speed-bg);
@@ -56,7 +57,7 @@
       width: 320px;
       display: none; flex-direction: column;
       z-index: 30; overflow: hidden;
-      padding-bottom: 15px;
+      padding-bottom: 12px;
     }
     .settings-menu.active { display: flex; }
 
@@ -67,28 +68,27 @@
     }
     .menu-item:hover { background: rgba(255,255,255,0.1); }
 
-    /* ADVANCED SPEED VIEW */
-    .speed-view { display: none; padding: 10px 15px; }
-    .speed-top-nav { display: flex; align-items: center; margin-bottom: 5px; }
-    .back-btn { background: none; border: none; cursor: pointer; padding: 5px; margin-right: auto; }
+    /* SPEED VIEW ADJUSTMENTS */
+    .speed-view { display: none; padding: 8px 15px; }
+    .speed-top-nav { display: flex; align-items: center; margin-bottom: 0px; height: 30px; }
+    .back-btn { background: none; border: none; cursor: pointer; padding: 5px; }
 
     .speed-display-large {
       color: #fff; font-size: 22px; font-weight: 500;
-      text-align: center; margin-bottom: 20px; margin-top: -10px;
+      text-align: center; margin-bottom: 12px; margin-top: -15px; /* Shifted Up */
     }
 
     .slider-row {
       display: flex; align-items: center; justify-content: center;
-      gap: 15px; margin-bottom: 20px;
+      gap: 12px; margin-bottom: 18px; /* Compacted height */
     }
 
     .adj-btn {
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 42px; height: 42px; border-radius: 50%;
       background: rgba(255,255,255,0.1); border: none;
       color: #fff; font-size: 24px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
-    .adj-btn:active { background: rgba(255,255,255,0.2); }
 
     /* WHITE SLIDER */
     .speed-range {
@@ -100,19 +100,35 @@
       border-radius: 50%; background: #fff; cursor: pointer;
     }
 
-    /* DIRECT SPEED PILLS */
+    /* RECTANGULAR SPEED BOXES */
     .pills-container {
-      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+      align-items: flex-start;
     }
+    
+    .pill-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
     .pill {
       background: rgba(255,255,255,0.1); border: none; color: #fff;
-      padding: 8px 14px; border-radius: 20px; font-size: 13px;
-      cursor: pointer; transition: 0.2s;
+      width: 48px; height: 36px; /* Rectangular shape */
+      border-radius: 8px; /* Curved borders */
+      font-size: 13px; cursor: pointer; transition: 0.2s;
+      display: flex; align-items: center; justify-content: center;
     }
-    .pill:hover, .pill.active { background: rgba(255,255,255,0.25); }
-    .pill-subtext { display: block; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+    .pill:hover { background: rgba(255,255,255,0.2); }
+    
+    .normal-label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.6);
+        font-weight: 400;
+    }
 
-    /* CENTER OVERLAYS */
+    /* PLAYER OVERLAYS & CONTROLS */
     .center-play {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 80px; height: 80px; background: rgba(255, 255, 255, 0.9);
@@ -120,7 +136,6 @@
       pointer-events: none; z-index: 5;
     }
 
-    /* SEEK ANIMATION */
     .seek-feedback {
       position: absolute; top: 0; bottom: 0; width: 50%;
       display: flex; align-items: center; justify-content: center;
@@ -128,6 +143,7 @@
     }
     .seek-left { left: 0; } .seek-right { right: 0; }
     .seek-feedback svg { width: 50px; fill: rgba(0, 0, 0, 0.6); }
+
     @keyframes seekAnim {
       0% { opacity: 0; transform: scale(0.8); }
       30% { opacity: 1; transform: scale(1); }
@@ -135,7 +151,6 @@
     }
     .animate-seek { animation: seekAnim 0.6s ease-out forwards; }
 
-    /* BOTTOM CONTROLS */
     .controls-overlay {
       position: absolute; bottom: 0; left: 0; right: 0;
       background: linear-gradient(transparent, rgba(0,0,0,0.85));
@@ -153,7 +168,6 @@
     .ctrl-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
     .ctrl-btn svg { width: 24px; height: 24px; fill: #fff; }
 
-    /* PROGRESS BAR */
     .prog-bar {
       -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
       border-radius: 2px; background: rgba(255, 255, 255, 0.3); cursor: pointer;
@@ -171,7 +185,7 @@
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
     </video>
 
-    <!-- Correct Settings Gear Icon (Restored) -->
+    <!-- Correct Settings Icon -->
     <button class="settings-btn" id="setBtn">
       <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     </button>
@@ -200,7 +214,10 @@
 
         <div class="pills-container">
             <button class="pill" data-val="0.5">0.5</button>
-            <button class="pill" data-val="1.0">1.0 <span class="pill-subtext">Normal</span></button>
+            <div class="pill-wrapper">
+                <button class="pill" data-val="1.0">1.0</button>
+                <span class="normal-label">Normal</span>
+            </div>
             <button class="pill" data-val="1.5">1.5</button>
             <button class="pill" data-val="2.0">2.0</button>
             <button class="pill" data-val="3.0">3.0</button>
@@ -208,7 +225,7 @@
       </div>
     </div>
 
-    <!-- Center Overlays -->
+    <!-- Center Feedback -->
     <div class="seek-feedback seek-left" id="seekLeft"><svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg></div>
     <div class="seek-feedback seek-right" id="seekRight"><svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg></div>
     <div class="center-play" id="centerPlay">
@@ -245,7 +262,6 @@
 
     let clickTimeout;
 
-    // Tap/Click Logic
     video.onclick = (e) => {
       if (e.detail === 1) clickTimeout = setTimeout(() => { if (video.paused) video.play(); else video.pause(); }, 250);
     };
@@ -271,14 +287,12 @@
     video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
     progBar.oninput = (e) => video.currentTime = (e.target.value / 100) * video.duration;
 
-    // Menu logic
     setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetMenuView(); };
     document.getElementById('openSpeed').onclick = (e) => { e.stopPropagation(); mainView.style.display = 'none'; speedView.style.display = 'block'; };
     document.getElementById('backToMenu').onclick = (e) => { e.stopPropagation(); resetMenuView(); };
     function resetMenuView() { mainView.style.display = 'block'; speedView.style.display = 'none'; }
     document.onclick = () => setMenu.classList.remove('active');
 
-    // Speed Control
     function updateSpeed(val) {
         val = Math.max(0.25, Math.min(3, parseFloat(val)));
         video.playbackRate = val;
