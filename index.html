@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Video Player - Tap-to-Reveal Controls</title>
+  <title>Pro Video Player - Buffering + Tap Logic</title>
   <style>
     :root {
       --progress-fill: #ff5722;
@@ -40,6 +40,31 @@
     }
 
     video { width: 100%; height: 100%; display: block; cursor: pointer; }
+
+    /* YOUTUBE STYLE BUFFERING SPINNER */
+    .buffer-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      display: none;
+      pointer-events: none;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top: 5px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
     /* SETTINGS GEAR */
     .settings-btn {
@@ -83,12 +108,12 @@
     .pill:hover { background: rgba(255,255,255,0.2); }
     .normal-label { font-size: 11px; color: rgba(255,255,255,0.6); }
 
-    /* CENTER PLAY/PAUSE (Now clickable when visible) */
+    /* CENTER PLAY/PAUSE */
     .center-play {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 80px; height: 80px; background: rgba(255, 255, 255, 0.9);
       border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      z-index: 5; cursor: pointer; transition: opacity 0.3s;
+      z-index: 10; cursor: pointer; transition: opacity 0.3s;
     }
 
     /* AUTO-HIDE WRAPPER */
@@ -99,7 +124,7 @@
       pointer-events: none;
     }
 
-    /* SEEK ANIMATIONS (<<< / >>>) */
+    /* SEEK ANIMATIONS */
     .seek-feedback { position: absolute; top: 0; bottom: 0; width: 50%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 4; opacity: 0; }
     .seek-left { left: 0; } .seek-right { right: 0; }
     .seek-feedback svg { width: 50px; fill: rgba(0, 0, 0, 0.6); }
@@ -111,7 +136,7 @@
       position: absolute; bottom: 0; left: 0; right: 0;
       background: linear-gradient(transparent, rgba(0,0,0,0.85));
       padding: 10px 15px 15px 15px; display: flex; flex-direction: column; gap: 10px;
-      z-index: 10; transition: opacity 0.3s;
+      z-index: 25; transition: opacity 0.3s;
     }
     .controls-row { display: flex; align-items: center; justify-content: space-between; }
     .time-box { color: #fff; font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -129,10 +154,17 @@
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
     </video>
 
+    <!-- Buffering Spinner Overlay -->
+    <div class="buffer-overlay" id="bufferSpinner">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Settings Button -->
     <button class="settings-btn" id="setBtn">
       <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     </button>
 
+    <!-- Settings Menu -->
     <div class="settings-menu" id="setMenu">
       <div id="mainMenuView" class="menu-view">
         <div class="menu-item" id="openSpeed">Speed <span id="currentSpeedLabel">1x</span></div>
@@ -149,7 +181,6 @@
     <div class="seek-feedback seek-left" id="seekLeft"><svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg></div>
     <div class="seek-feedback seek-right" id="seekRight"><svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg></div>
 
-    <!-- Clickable Center Button -->
     <div class="center-play" id="centerPlay">
        <svg id="playIcon" viewBox="0 0 24 24" width="34"><path d="M8 5v14l11-7z" fill="black"/></svg>
     </div>
@@ -177,12 +208,19 @@
     const centerBtn = document.getElementById('centerPlay');
     const playIcon = document.getElementById('playIcon');
     const speedRange = document.getElementById('speedRange');
+    const bufferSpinner = document.getElementById('bufferSpinner');
     
     let hideTimer;
 
-    // Logic: Tap Screen to Reveal, Center to Play/Pause
+    // BUFFERING LOGIC
+    video.addEventListener('waiting', () => { bufferSpinner.style.display = 'block'; });
+    video.addEventListener('playing', () => { bufferSpinner.style.display = 'none'; });
+    video.addEventListener('canplay', () => { bufferSpinner.style.display = 'none'; });
+    video.addEventListener('seeking', () => { bufferSpinner.style.display = 'block'; });
+    video.addEventListener('seeked', () => { bufferSpinner.style.display = 'none'; });
+
+    // Interaction Logic
     video.onclick = (e) => {
-      // Handle Double Click for Seeking
       if (e.detail === 2) {
         clearTimeout(clickTimeout);
         const x = e.clientX - video.getBoundingClientRect().left;
@@ -192,53 +230,26 @@
         el.classList.remove('animate-seek'); void el.offsetWidth; el.classList.add('animate-seek');
         return;
       }
-
-      // Handle Single Click - Toggle UI only
       var clickTimeout = setTimeout(() => {
-        if (player.classList.contains('inactive')) {
-          showUI();
-        } else {
-          hideUI();
-        }
+        if (player.classList.contains('inactive')) showUI();
+        else hideUI();
       }, 250);
     };
 
-    // Center button ONLY toggles play/pause
     centerBtn.onclick = (e) => {
-      e.stopPropagation(); // Don't trigger the video hide logic
+      e.stopPropagation();
       if (video.paused) video.play();
       else video.pause();
       resetHideTimer();
     };
 
-    function showUI() {
-      player.classList.remove('inactive');
-      resetHideTimer();
-    }
+    function showUI() { player.classList.remove('inactive'); resetHideTimer(); }
+    function hideUI() { player.classList.add('inactive'); setMenu.classList.remove('active'); }
+    function resetHideTimer() { clearTimeout(hideTimer); if (!video.paused) hideTimer = setTimeout(hideUI, 3500); }
 
-    function hideUI() {
-      player.classList.add('inactive');
-      setMenu.classList.remove('active');
-    }
+    video.onplay = () => { playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="black"/>'; resetHideTimer(); };
+    video.onpause = () => { playIcon.innerHTML = '<path d="M8 5v14l11-7z" fill="black"/>'; showUI(); };
 
-    function resetHideTimer() {
-      clearTimeout(hideTimer);
-      if (!video.paused) {
-        hideTimer = setTimeout(hideUI, 3500); // Hide after 3.5s of idle play
-      }
-    }
-
-    video.onplay = () => {
-      playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="black"/>';
-      resetHideTimer();
-    };
-
-    video.onpause = () => {
-      playIcon.innerHTML = '<path d="M8 5v14l11-7z" fill="black"/>';
-      showUI(); // Keep UI visible when paused
-    };
-
-    // Progress and Formatting
     const fmt = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
     video.ontimeupdate = () => {
       currTimeEl.textContent = fmt(video.currentTime);
@@ -249,7 +260,6 @@
     video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
     progBar.oninput = (e) => { video.currentTime = (e.target.value / 100) * video.duration; resetHideTimer(); };
 
-    // Other UI Logic
     setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetHideTimer(); };
     document.getElementById('openSpeed').onclick = (e) => { e.stopPropagation(); document.getElementById('mainMenuView').style.display='none'; document.getElementById('speedView').style.display='block'; };
     document.getElementById('backToMenu').onclick = (e) => { e.stopPropagation(); document.getElementById('mainMenuView').style.display='block'; document.getElementById('speedView').style.display='none'; };
