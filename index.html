@@ -298,4 +298,10 @@
 
     document.getElementById('pipOption').onclick = async () => { try { if (video !== document.pictureInPictureElement) await video.requestPictureInPicture(); else await document.exitPictureInPicture(); } catch(e){} };
     document.getElementById('volBtn').onclick = () => { video.muted = !video.muted; document.getElementById('volIcon').style.opacity = video.muted ? 0.4 : 1; };
-    document.getElementById('fullBtn').onclick = () => { if
+    document.getElementById('fullBtn').onclick = () => { if (!document.fullscreenElement) player.requestFullscreen(); else document.exitFullscreen(); };
+
+    let hT; const resetH = () => { player.classList.remove('inactive'); clearTimeout(hT); if (!video.paused) hT = setTimeout(() => player.classList.add('inactive'), 3000); };
+    player.onmousemove = resetH; player.ontouchstart = resetH;
+  </script>
+</body>
+</html>
