@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Video Player - Buffering + Tap Logic</title>
+  <title>Pro Video Player - YouTube Style Seekbar</title>
   <style>
     :root {
-      --progress-fill: #ff5722;
-      --progress-dot: #ff0000;
+      --progress-played: #ff5722;   /* Orange Played */
+      --progress-dot: #ff0000;      /* Red Dot */
+      --progress-buffered: rgba(255, 255, 255, 0.4); /* White Buffered */
+      --progress-bg: rgba(255, 255, 255, 0.2);       /* Darker Background */
       --speed-bg: rgba(28, 28, 28, 0.98);
       --font: system-ui, -apple-system, sans-serif;
     }
@@ -43,46 +45,30 @@
 
     /* YOUTUBE STYLE BUFFERING SPINNER */
     .buffer-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 15;
-      display: none;
-      pointer-events: none;
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 15; display: none; pointer-events: none;
     }
-
     .spinner {
-      width: 60px;
-      height: 60px;
-      border: 5px solid rgba(255, 255, 255, 0.2);
-      border-top: 5px solid #ffffff;
-      border-radius: 50%;
+      width: 60px; height: 60px; border: 5px solid rgba(255, 255, 255, 0.2);
+      border-top: 5px solid #ffffff; border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
     /* SETTINGS GEAR */
     .settings-btn {
       position: absolute; top: 15px; right: 15px; z-index: 20;
       background: none; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity 0.3s;
     }
 
     .settings-menu {
       position: absolute; top: 55px; right: 15px;
       background: var(--speed-bg);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 15px;
-      width: 320px;
+      border-radius: 15px; width: 320px;
       display: none; flex-direction: column;
-      z-index: 30; overflow: hidden;
-      padding-bottom: 12px;
+      z-index: 30; overflow: hidden; padding-bottom: 12px;
     }
     .settings-menu.active { display: flex; }
 
@@ -102,6 +88,7 @@
     .adj-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .speed-range { -webkit-appearance: none; width: 160px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; }
     .speed-range::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #fff; cursor: pointer; }
+    
     .pills-container { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: flex-start; }
     .pill-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .pill { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 48px; height: 36px; border-radius: 8px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
@@ -120,8 +107,7 @@
     .video-container.inactive .controls-overlay,
     .video-container.inactive .settings-btn,
     .video-container.inactive .center-play {
-      opacity: 0;
-      pointer-events: none;
+      opacity: 0; pointer-events: none;
     }
 
     /* SEEK ANIMATIONS */
@@ -143,8 +129,27 @@
     .action-group { display: flex; align-items: center; gap: 14px; }
     .ctrl-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
     .ctrl-btn svg { width: 24px; height: 24px; fill: #fff; }
-    .prog-bar { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); cursor: pointer; }
-    .prog-bar::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--progress-dot); }
+
+    /* SEEK BAR / PROGRESS BAR */
+    .prog-container { width: 100%; display: flex; align-items: center; }
+    .prog-bar {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      /* Default background is overridden by JS Gradient */
+      background: var(--progress-bg);
+      outline: none;
+      cursor: pointer;
+    }
+    .prog-bar::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--progress-dot);
+      box-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
   </style>
 </head>
 <body>
@@ -154,17 +159,14 @@
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
     </video>
 
-    <!-- Buffering Spinner Overlay -->
     <div class="buffer-overlay" id="bufferSpinner">
       <div class="spinner"></div>
     </div>
 
-    <!-- Settings Button -->
     <button class="settings-btn" id="setBtn">
       <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     </button>
 
-    <!-- Settings Menu -->
     <div class="settings-menu" id="setMenu">
       <div id="mainMenuView" class="menu-view">
         <div class="menu-item" id="openSpeed">Speed <span id="currentSpeedLabel">1x</span></div>
@@ -193,7 +195,9 @@
           <button class="ctrl-btn" id="fullBtn"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
         </div>
       </div>
-      <div class="prog-container"><input type="range" class="prog-bar" id="progBar" min="0" max="100" value="0" step="0.1"></div>
+      <div class="prog-container">
+        <input type="range" class="prog-bar" id="progBar" min="0" max="100" value="0" step="0.1">
+      </div>
     </div>
   </div>
 
@@ -219,7 +223,7 @@
     video.addEventListener('seeking', () => { bufferSpinner.style.display = 'block'; });
     video.addEventListener('seeked', () => { bufferSpinner.style.display = 'none'; });
 
-    // Interaction Logic
+    // INTERACTION LOGIC
     video.onclick = (e) => {
       if (e.detail === 2) {
         clearTimeout(clickTimeout);
@@ -250,16 +254,50 @@
     video.onplay = () => { playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="black"/>'; resetHideTimer(); };
     video.onpause = () => { playIcon.innerHTML = '<path d="M8 5v14l11-7z" fill="black"/>'; showUI(); };
 
-    const fmt = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
-    video.ontimeupdate = () => {
-      currTimeEl.textContent = fmt(video.currentTime);
-      const p = (video.currentTime / video.duration) * 100 || 0;
-      progBar.value = p;
-      progBar.style.background = `linear-gradient(to right, var(--progress-fill) ${p}%, rgba(255,255,255,0.3) ${p}%)`;
-    };
-    video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
-    progBar.oninput = (e) => { video.currentTime = (e.target.value / 100) * video.duration; resetHideTimer(); };
+    // SEEKBAR GRADIENT UPDATE (Played + Buffered + Background)
+    function updateProgressBar() {
+        const played = (video.currentTime / video.duration) * 100 || 0;
+        
+        // Find the buffer range that contains or follows the current time
+        let bufferedEnd = 0;
+        if (video.buffered.length > 0) {
+            for (let i = 0; i < video.buffered.length; i++) {
+                if (video.buffered.start(i) <= video.currentTime) {
+                    bufferedEnd = video.buffered.end(i);
+                }
+            }
+        }
+        const buffered = (bufferedEnd / video.duration) * 100 || 0;
 
+        // Apply a multi-color gradient:
+        // Orange (Played) -> White (Buffered) -> Dark Gray (Background)
+        progBar.value = played;
+        progBar.style.background = `linear-gradient(to right, 
+            var(--progress-played) 0%, 
+            var(--progress-played) ${played}%, 
+            var(--progress-buffered) ${played}%, 
+            var(--progress-buffered) ${buffered}%, 
+            var(--progress-bg) ${buffered}%, 
+            var(--progress-bg) 100%)`;
+    }
+
+    const fmt = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+    
+    video.ontimeupdate = () => {
+        currTimeEl.textContent = fmt(video.currentTime);
+        updateProgressBar();
+    };
+
+    // Listen for download progress to update the white bar
+    video.addEventListener('progress', updateProgressBar);
+
+    video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
+    progBar.oninput = (e) => { 
+        video.currentTime = (e.target.value / 100) * video.duration; 
+        resetHideTimer(); 
+    };
+
+    // SETTINGS / SPEED LOGIC
     setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetHideTimer(); };
     document.getElementById('openSpeed').onclick = (e) => { e.stopPropagation(); document.getElementById('mainMenuView').style.display='none'; document.getElementById('speedView').style.display='block'; };
     document.getElementById('backToMenu').onclick = (e) => { e.stopPropagation(); document.getElementById('mainMenuView').style.display='block'; document.getElementById('speedView').style.display='none'; };
