@@ -3,13 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Video Player - Custom Speed UI</title>
+  <title>Pro Video Player - Advanced Speed UI</title>
   <style>
     :root {
-      --progress-fill: #ff5722; /* Orange for main progress */
-      --progress-dot: #ff0000;  /* Red for main dot */
-      --ui-white: #ffffff;      /* White for Speed Menu */
-      --pill-bg: rgba(255, 255, 255, 0.1);
+      --progress-fill: #ff5722; 
+      --progress-dot: #ff0000;  
+      --speed-bg: rgba(28, 28, 28, 0.98);
       --font: system-ui, -apple-system, sans-serif;
     }
 
@@ -49,72 +48,79 @@
     }
 
     .settings-menu {
-      position: absolute; bottom: 70px; right: 15px;
-      background: rgba(28, 28, 28, 0.98);
+      position: absolute; top: 55px; right: 15px;
+      background: var(--speed-bg);
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      width: 280px;
-      display: none;
-      flex-direction: column;
-      z-index: 30;
-      padding: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 15px;
+      width: 320px; /* Slightly wider for the new UI */
+      display: none; flex-direction: column;
+      z-index: 30; overflow: hidden;
+      padding-bottom: 15px;
     }
     .settings-menu.active { display: flex; }
 
+    .menu-view { padding: 5px 0; }
     .menu-item {
       padding: 12px 16px; color: #fff; font-size: 14px;
       cursor: pointer; display: flex; justify-content: space-between;
     }
-    .menu-item:hover { background: rgba(255,255,255,0.05); border-radius: 8px; }
+    .menu-item:hover { background: rgba(255,255,255,0.1); }
 
-    /* SPEED UI (MATCHING IMAGE) */
-    .speed-view { display: none; text-align: center; color: white; padding-top: 5px;}
+    /* ADVANCED SPEED VIEW */
+    .speed-view { display: none; padding: 10px 15px; }
     
-    .speed-top-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .back-icon { cursor: pointer; padding: 5px; opacity: 0.8; }
-    .speed-display { font-size: 18px; font-weight: 500; flex-grow: 1; margin-right: 25px; }
+    .speed-top-nav { display: flex; align-items: center; margin-bottom: 5px; }
+    .back-btn { background: none; border: none; cursor: pointer; padding: 5px; margin-right: auto; }
 
-    .slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 0 10px; }
-    
+    .speed-display-large {
+      color: #fff; font-size: 22px; font-weight: 500;
+      text-align: center; margin-bottom: 20px; margin-top: -10px;
+    }
+
+    .slider-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 15px; margin-bottom: 25px;
+    }
+
     .adj-btn {
-      background: rgba(255,255,255,0.1); border: none; width: 40px; height: 40px;
-      border-radius: 50%; color: white; font-size: 20px; cursor: pointer;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); border: none;
+      color: #fff; font-size: 24px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
     }
     .adj-btn:active { background: rgba(255,255,255,0.2); }
 
+    /* WHITE SLIDER */
     .speed-range {
-      -webkit-appearance: none; width: 100%; height: 3px;
-      background: rgba(255,255,255,0.2); border-radius: 2px; outline: none;
+      -webkit-appearance: none; width: 160px; height: 3px;
+      background: rgba(255,255,255,0.3); border-radius: 2px; outline: none;
     }
-    /* White Slider Dot */
     .speed-range::-webkit-slider-thumb {
-      -webkit-appearance: none; width: 14px; height: 14px;
-      border-radius: 50%; background: var(--ui-white); cursor: pointer;
+      -webkit-appearance: none; width: 16px; height: 16px;
+      border-radius: 50%; background: #fff; cursor: pointer;
     }
 
-    .preset-row {
-      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;
-      scrollbar-width: none; /* Hide scrollbar Firefox */
+    /* DIRECT SPEED PILLS */
+    .pills-container {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
     }
-    .preset-row::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome */
-
-    .speed-pill {
-      background: var(--pill-bg); border: none; color: white;
-      padding: 8px 16px; border-radius: 20px; font-size: 13px;
-      cursor: pointer; white-space: nowrap; transition: 0.2s;
+    .pill {
+      background: rgba(255,255,255,0.1); border: none; color: #fff;
+      padding: 8px 14px; border-radius: 20px; font-size: 13px;
+      cursor: pointer; transition: 0.2s;
     }
-    .speed-pill.active { background: white; color: black; font-weight: bold; }
+    .pill:hover, .pill.active { background: rgba(255,255,255,0.25); }
+    .pill-subtext { display: block; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
 
-    /* CENTER FEEDBACK & CONTROLS */
+    /* CENTER OVERLAYS */
     .center-play {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       width: 80px; height: 80px; background: rgba(255, 255, 255, 0.9);
       border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      pointer-events: none; z-index: 5; transition: opacity 0.3s;
+      pointer-events: none; z-index: 5;
     }
 
+    /* SEEK ANIMATION */
     .seek-feedback {
       position: absolute; top: 0; bottom: 0; width: 50%;
       display: flex; align-items: center; justify-content: center;
@@ -122,7 +128,6 @@
     }
     .seek-left { left: 0; } .seek-right { right: 0; }
     .seek-feedback svg { width: 50px; fill: rgba(0, 0, 0, 0.6); }
-
     @keyframes seekAnim {
       0% { opacity: 0; transform: scale(0.8); }
       30% { opacity: 1; transform: scale(1); }
@@ -130,6 +135,7 @@
     }
     .animate-seek { animation: seekAnim 0.6s ease-out forwards; }
 
+    /* BOTTOM CONTROLS */
     .controls-overlay {
       position: absolute; bottom: 0; left: 0; right: 0;
       background: linear-gradient(transparent, rgba(0,0,0,0.85));
@@ -147,10 +153,10 @@
     .ctrl-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
     .ctrl-btn svg { width: 24px; height: 24px; fill: #fff; }
 
-    .prog-container { width: 100%; display: flex; align-items: center; }
+    /* PROGRESS BAR */
     .prog-bar {
       -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
-      border-radius: 2px; background: rgba(255, 255, 255, 0.3); outline: none; cursor: pointer;
+      border-radius: 2px; background: rgba(255, 255, 255, 0.3); cursor: pointer;
     }
     .prog-bar::-webkit-slider-thumb {
       -webkit-appearance: none; width: 14px; height: 14px;
@@ -165,52 +171,53 @@
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
     </video>
 
+    <!-- Settings Gear -->
     <button class="settings-btn" id="setBtn">
       <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     </button>
 
+    <!-- Settings Menu -->
     <div class="settings-menu" id="setMenu">
-      <!-- Main Options -->
-      <div id="mainMenuView">
-        <div class="menu-item" id="openSpeed">Playback Speed <span id="currentSpeedLabel">1x</span></div>
+      <div id="mainMenuView" class="menu-view">
+        <div class="menu-item" id="openSpeed">Speed <span id="currentSpeedLabel">1x</span></div>
         <div class="menu-item" id="pipOption">Picture-in-Picture</div>
       </div>
 
-      <!-- Speed Custom UI -->
-      <div id="speedCustomView" class="speed-view">
-        <div class="speed-top-row">
-            <div class="back-icon" id="backToMenu">
-                <svg viewBox="0 0 24 24" width="20" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
-            </div>
-            <div class="speed-display" id="speedVal">1.0x</div>
+      <div id="speedView" class="speed-view">
+        <div class="speed-top-nav">
+            <button class="back-btn" id="backToMenu">
+                <svg viewBox="0 0 24 24" width="22" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            </button>
         </div>
+        
+        <div class="speed-display-large" id="largeSpeedLabel">1.0x</div>
 
         <div class="slider-row">
-            <button class="adj-btn" id="speedMinus">–</button>
+            <button class="adj-btn" id="minusBtn">−</button>
             <input type="range" class="speed-range" id="speedRange" min="0.25" max="3" step="0.05" value="1">
-            <button class="adj-btn" id="speedPlus">+</button>
+            <button class="adj-btn" id="plusBtn">+</button>
         </div>
 
-        <div class="preset-row">
-            <button class="speed-pill" data-val="0.25">0.25</button>
-            <button class="speed-pill" data-val="0.5">0.5</button>
-            <button class="speed-pill active" data-val="1">Normal</button>
-            <button class="speed-pill" data-val="1.5">1.5</button>
-            <button class="speed-pill" data-val="2">2.0</button>
-            <button class="speed-pill" data-val="2.5">2.5</button>
-            <button class="speed-pill" data-val="3">3.0</button>
+        <div class="pills-container">
+            <button class="pill" data-val="0.25">0.25</button>
+            <button class="pill" data-val="0.5">0.5</button>
+            <button class="pill" data-val="1.0">1.0 <span class="pill-subtext">Normal</span></button>
+            <button class="pill" data-val="1.5">1.5</button>
+            <button class="pill" data-val="2.0">2.0</button>
+            <button class="pill" data-val="2.5">2.5</button>
+            <button class="pill" data-val="3.0">3.0</button>
         </div>
       </div>
     </div>
 
-    <!-- Feedbacks -->
+    <!-- Center Play & Feedback -->
     <div class="seek-feedback seek-left" id="seekLeft"><svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg></div>
     <div class="seek-feedback seek-right" id="seekRight"><svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg></div>
-    
     <div class="center-play" id="centerPlay">
        <svg id="playIcon" viewBox="0 0 24 24" width="34"><path d="M8 5v14l11-7z" fill="black"/></svg>
     </div>
 
+    <!-- Bottom Controls -->
     <div class="controls-overlay">
       <div class="controls-row">
         <div class="time-box"><span id="currTime">0:00</span> / <span id="duration">0:00</span></div>
@@ -232,18 +239,20 @@
     const setBtn = document.getElementById('setBtn');
     const setMenu = document.getElementById('setMenu');
     const mainView = document.getElementById('mainMenuView');
-    const speedView = document.getElementById('speedCustomView');
+    const speedView = document.getElementById('speedView');
     const speedRange = document.getElementById('speedRange');
-    const speedDisplay = document.getElementById('speedVal');
+    const largeSpeedLabel = document.getElementById('largeSpeedLabel');
     const currentSpeedLabel = document.getElementById('currentSpeedLabel');
-    
-    let clickT;
+    const playIcon = document.getElementById('playIcon');
 
+    let clickTimeout;
+
+    // Click logic
     video.onclick = (e) => {
-      if (e.detail === 1) clickT = setTimeout(() => { video.paused ? video.play() : video.pause(); }, 250);
+      if (e.detail === 1) clickTimeout = setTimeout(() => { if (video.paused) video.play(); else video.pause(); }, 250);
     };
     video.ondblclick = (e) => {
-      clearTimeout(clickT);
+      clearTimeout(clickTimeout);
       const x = e.clientX - video.getBoundingClientRect().left;
       const target = x < video.clientWidth / 2 ? 'seekLeft' : 'seekRight';
       video.currentTime += (target === 'seekLeft' ? -10 : 10);
@@ -264,46 +273,35 @@
     video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
     progBar.oninput = (e) => video.currentTime = (e.target.value / 100) * video.duration;
 
-    // Menu Logic
-    setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetView(); };
+    // Settings logic
+    setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetMenuView(); };
     document.getElementById('openSpeed').onclick = (e) => { e.stopPropagation(); mainView.style.display = 'none'; speedView.style.display = 'block'; };
-    document.getElementById('backToMenu').onclick = (e) => { e.stopPropagation(); resetView(); };
-    function resetView() { mainView.style.display = 'block'; speedView.style.display = 'none'; }
+    document.getElementById('backToMenu').onclick = (e) => { e.stopPropagation(); resetMenuView(); };
+    function resetMenuView() { mainView.style.display = 'block'; speedView.style.display = 'none'; }
     document.onclick = () => setMenu.classList.remove('active');
 
     // Speed Control Logic
     function updateSpeed(val) {
-      val = Math.min(3, Math.max(0.25, parseFloat(val)));
-      video.playbackRate = val;
-      const displayVal = val.toFixed(2) + 'x';
-      speedDisplay.textContent = displayVal;
-      currentSpeedLabel.textContent = val === 1 ? '1x' : displayVal;
-      speedRange.value = val;
-      
-      // Update Pills UI
-      document.querySelectorAll('.speed-pill').forEach(p => {
-        p.classList.toggle('active', parseFloat(p.dataset.val) === val);
-      });
-
-      // Slider visual track (White)
-      const p = ((val - 0.25) / (3 - 0.25)) * 100;
-      speedRange.style.background = `linear-gradient(to right, white ${p}%, rgba(255,255,255,0.2) ${p}%)`;
+        val = Math.max(0.25, Math.min(3, parseFloat(val)));
+        video.playbackRate = val;
+        speedRange.value = val;
+        const text = val.toFixed(2).replace(/[.,]00$/, "") + 'x';
+        largeSpeedLabel.textContent = text;
+        currentSpeedLabel.textContent = text;
     }
 
     speedRange.oninput = (e) => updateSpeed(e.target.value);
-    document.getElementById('speedMinus').onclick = (e) => { e.stopPropagation(); updateSpeed(video.playbackRate - 0.1); };
-    document.getElementById('speedPlus').onclick = (e) => { e.stopPropagation(); updateSpeed(video.playbackRate + 0.1); };
-    
-    document.querySelectorAll('.speed-pill').forEach(p => {
-      p.onclick = (e) => { e.stopPropagation(); updateSpeed(p.dataset.val); };
+    document.getElementById('minusBtn').onclick = (e) => { e.stopPropagation(); updateSpeed(video.playbackRate - 0.05); };
+    document.getElementById('plusBtn').onclick = (e) => { e.stopPropagation(); updateSpeed(video.playbackRate + 0.05); };
+
+    document.querySelectorAll('.pill').forEach(btn => {
+        btn.onclick = (e) => { e.stopPropagation(); updateSpeed(btn.dataset.val); };
     });
 
-    updateSpeed(1); // Initialize
-
     // Other Buttons
-    document.getElementById('pipOption').onclick = async () => { try { video !== document.pictureInPictureElement ? await video.requestPictureInPicture() : await document.exitPictureInPicture(); } catch(e){} };
+    document.getElementById('pipOption').onclick = async () => { try { if (video !== document.pictureInPictureElement) await video.requestPictureInPicture(); else await document.exitPictureInPicture(); } catch(e){} };
     document.getElementById('volBtn').onclick = () => { video.muted = !video.muted; document.getElementById('volIcon').style.opacity = video.muted ? 0.4 : 1; };
-    document.getElementById('fullBtn').onclick = () => { !document.fullscreenElement ? player.requestFullscreen() : document.exitFullscreen(); };
+    document.getElementById('fullBtn').onclick = () => { if (!document.fullscreenElement) player.requestFullscreen(); else document.exitFullscreen(); };
 
     let hT; const resetH = () => { player.classList.remove('inactive'); clearTimeout(hT); if (!video.paused) hT = setTimeout(() => player.classList.add('inactive'), 3000); };
     player.onmousemove = resetH; player.ontouchstart = resetH;
