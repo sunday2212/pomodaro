@@ -1,165 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+  .video-container { width: 640px; position: relative; }
+  video { width: 100%; display: block; }
+  
+  /* Custom Controls Bar */
+  .controls { display: flex; align-items: center; padding: 10px; background: #000; color: #fff; }
+  
+  /* Progress Bar Styling */
+  input[type=range] {
+    flex-grow: 1;
+    margin: 0 10px;
+    cursor: pointer;
+    background: transparent;
+    appearance: none;
+  }
 
-body{
-    background:#000;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-}
-
-.player{
-    position:relative;
-    width:900px;
-    max-width:100%;
-    background:#000;
-}
-
-video{
-    width:100%;
-    display:block;
-}
-
-.controls{
-    position:absolute;
-    bottom:0;
-    left:0;
-    width:100%;
-    padding:10px;
-    background:linear-gradient(transparent,rgba(0,0,0,.75));
-}
-
-.progress{
-    width:100%;
-    appearance:none;
-    height:4px;
-    border-radius:10px;
-    background:linear-gradient(to right,
-        #ff0000 0%,
-        #ff0000 var(--value),
-        #888 var(--value),
-        #888 100%);
-    cursor:pointer;
-}
-
-.progress::-webkit-slider-thumb{
-    appearance:none;
-    width:14px;
-    height:14px;
-    border-radius:50%;
-    background:#ff0000;
-    border:none;
-    margin-top:-5px;
-}
-
-.progress::-webkit-slider-runnable-track{
-    height:4px;
-    border-radius:10px;
-}
-
-.bottom{
-    margin-top:10px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    color:white;
-    font-family:Arial;
-}
-
-button{
-    background:none;
-    border:none;
-    color:white;
-    font-size:18px;
-    cursor:pointer;
-}
+  /* The "Orange" Progress (Chrome/Safari) */
+  input[type=range]::-webkit-slider-runnable-track {
+    background: #555; /* Unplayed part */
+    height: 4px;
+  }
+  
+  /* The "Dot" (Thumb) */
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    height: 14px;
+    width: 14px;
+    background: orange; /* Your requested color */
+    border-radius: 50%;
+    margin-top: -5px;
+  }
 </style>
 </head>
-
 <body>
 
-<div class="player">
-
-<video id="video">
-<source src="video.mp4" type="video/mp4">
-</video>
-
-<div class="controls">
-
-<input
-id="progress"
-class="progress"
-type="range"
-value="0"
-min="0"
-max="100">
-
-<div class="bottom">
-
-<button id="play">▶</button>
-
-<span id="time">
-0:00 / 0:00
-</span>
-
-</div>
-
-</div>
-
+<div class="video-container">
+  <video id="myVideo">
+    <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
+  </video>
+  
+  <div class="controls">
+    <button id="playBtn">Play</button>
+    <input type="range" id="progressBar" value="0" max="100">
+  </div>
 </div>
 
 <script>
+  const video = document.getElementById('myVideo');
+  const progressBar = document.getElementById('progressBar');
+  const playBtn = document.getElementById('playBtn');
 
-const video=document.getElementById("video");
-const progress=document.getElementById("progress");
-const play=document.getElementById("play");
-const time=document.getElementById("time");
+  playBtn.addEventListener('click', () => {
+    video.paused ? video.play() : video.pause();
+    playBtn.textContent = video.paused ? 'Play' : 'Pause';
+  });
 
-play.onclick=()=>{
+  video.addEventListener('timeupdate', () => {
+    const value = (video.currentTime / video.duration) * 100;
+    progressBar.value = value;
+  });
 
-if(video.paused){
-video.play();
-play.textContent="❚❚";
-}else{
-video.pause();
-play.textContent="▶";
-}
-
-};
-
-video.addEventListener("timeupdate",()=>{
-
-let percent=(video.currentTime/video.duration)*100||0;
-
-progress.value=percent;
-progress.style.setProperty("--value",percent+"%");
-
-let m=Math.floor(video.currentTime/60);
-let s=Math.floor(video.currentTime%60);
-
-let dm=Math.floor(video.duration/60)||0;
-let ds=Math.floor(video.duration%60)||0;
-
-time.textContent=
-`${m}:${String(s).padStart(2,"0")} / ${dm}:${String(ds).padStart(2,"0")}`;
-
-});
-
-progress.oninput=()=>{
-
-video.currentTime=(progress.value/100)*video.duration;
-
-};
-
+  progressBar.addEventListener('input', (e) => {
+    video.currentTime = (e.target.value / 100) * video.duration;
+  });
 </script>
 
 </body>
