@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Video Player - Advanced Speed UI</title>
+  <title>Pro Video Player - Compact Speed UI</title>
   <style>
     :root {
-      --progress-fill: #ff5722; 
-      --progress-dot: #ff0000;  
+      --progress-fill: #ff5722; /* Orange */
+      --progress-dot: #ff0000;  /* Red */
       --speed-bg: rgba(28, 28, 28, 0.98);
       --font: system-ui, -apple-system, sans-serif;
     }
@@ -52,7 +52,7 @@
       background: var(--speed-bg);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 15px;
-      width: 320px; /* Slightly wider for the new UI */
+      width: 320px;
       display: none; flex-direction: column;
       z-index: 30; overflow: hidden;
       padding-bottom: 15px;
@@ -79,7 +79,7 @@
 
     .slider-row {
       display: flex; align-items: center; justify-content: center;
-      gap: 15px; margin-bottom: 25px;
+      gap: 15px; margin-bottom: 20px;
     }
 
     .adj-btn {
@@ -100,7 +100,7 @@
       border-radius: 50%; background: #fff; cursor: pointer;
     }
 
-    /* DIRECT SPEED PILLS */
+    /* DIRECT SPEED PILLS - Compacted */
     .pills-container {
       display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
     }
@@ -110,7 +110,7 @@
       cursor: pointer; transition: 0.2s;
     }
     .pill:hover, .pill.active { background: rgba(255,255,255,0.25); }
-    .pill-subtext { display: block; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+    .pill-subtext { display: block; font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 1px; }
 
     /* CENTER OVERLAYS */
     .center-play {
@@ -173,7 +173,7 @@
 
     <!-- Settings Gear -->
     <button class="settings-btn" id="setBtn">
-      <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38(1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     </button>
 
     <!-- Settings Menu -->
@@ -199,18 +199,16 @@
         </div>
 
         <div class="pills-container">
-            <button class="pill" data-val="0.25">0.25</button>
             <button class="pill" data-val="0.5">0.5</button>
             <button class="pill" data-val="1.0">1.0 <span class="pill-subtext">Normal</span></button>
             <button class="pill" data-val="1.5">1.5</button>
             <button class="pill" data-val="2.0">2.0</button>
-            <button class="pill" data-val="2.5">2.5</button>
             <button class="pill" data-val="3.0">3.0</button>
         </div>
       </div>
     </div>
 
-    <!-- Center Play & Feedback -->
+    <!-- Center Feedback -->
     <div class="seek-feedback seek-left" id="seekLeft"><svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/></svg></div>
     <div class="seek-feedback seek-right" id="seekRight"><svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg></div>
     <div class="center-play" id="centerPlay">
@@ -247,7 +245,7 @@
 
     let clickTimeout;
 
-    // Click logic
+    // Tap/Click Logic
     video.onclick = (e) => {
       if (e.detail === 1) clickTimeout = setTimeout(() => { if (video.paused) video.play(); else video.pause(); }, 250);
     };
@@ -273,14 +271,14 @@
     video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
     progBar.oninput = (e) => video.currentTime = (e.target.value / 100) * video.duration;
 
-    // Settings logic
+    // Menu logic
     setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetMenuView(); };
     document.getElementById('openSpeed').onclick = (e) => { e.stopPropagation(); mainView.style.display = 'none'; speedView.style.display = 'block'; };
     document.getElementById('backToMenu').onclick = (e) => { e.stopPropagation(); resetMenuView(); };
     function resetMenuView() { mainView.style.display = 'block'; speedView.style.display = 'none'; }
     document.onclick = () => setMenu.classList.remove('active');
 
-    // Speed Control Logic
+    // Speed Control
     function updateSpeed(val) {
         val = Math.max(0.25, Math.min(3, parseFloat(val)));
         video.playbackRate = val;
@@ -298,13 +296,6 @@
         btn.onclick = (e) => { e.stopPropagation(); updateSpeed(btn.dataset.val); };
     });
 
-    // Other Buttons
     document.getElementById('pipOption').onclick = async () => { try { if (video !== document.pictureInPictureElement) await video.requestPictureInPicture(); else await document.exitPictureInPicture(); } catch(e){} };
     document.getElementById('volBtn').onclick = () => { video.muted = !video.muted; document.getElementById('volIcon').style.opacity = video.muted ? 0.4 : 1; };
-    document.getElementById('fullBtn').onclick = () => { if (!document.fullscreenElement) player.requestFullscreen(); else document.exitFullscreen(); };
-
-    let hT; const resetH = () => { player.classList.remove('inactive'); clearTimeout(hT); if (!video.paused) hT = setTimeout(() => player.classList.add('inactive'), 3000); };
-    player.onmousemove = resetH; player.ontouchstart = resetH;
-  </script>
-</body>
-</html>
+    document.getElementById('fullBtn').onclick = () => { if
