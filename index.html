@@ -3,45 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Native Style Video Player Pro</title>
+  <title>Custom Pro Video Player</title>
   <style>
     :root {
-      --progress-fill-color: #ff5722; /* Orange progress bar */
-      --progress-dot-color: #ff0000;  /* Red progress bar dot */
-      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --progress-fill: #ff5722; /* Orange progress bar */
+      --progress-dot: #ff0000;  /* Red progress bar dot */
+      --control-bg: rgba(0, 0, 0, 0.7);
+      --font: system-ui, -apple-system, sans-serif;
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      /* REMOVES BLUE FLASH ON CLICK/TAP */
+      /* REMOVE BLUE HIGHLIGHT/FLASH ON CLICK */
       -webkit-tap-highlight-color: transparent;
-      outline: none;
+      user-select: none;
     }
 
     body {
-      background-color: #121212;
+      background-color: #0f0f0f;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      font-family: var(--font-family);
-      overflow: hidden;
+      font-family: var(--font);
     }
 
-    /* Video Player Container */
     .video-container {
       position: relative;
       width: 100%;
-      max-width: 800px;
-      background-color: #000;
-      border-radius: 8px;
+      max-width: 850px;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 12px;
       overflow: hidden;
-      /* PREVENTS HIGHLIGHTING/BLUE FLASH */
-      user-select: none;
-      -webkit-user-select: none;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
     }
 
     video {
@@ -51,103 +48,130 @@
       cursor: pointer;
     }
 
-    /* Center Play Button Overlay */
-    .center-play-btn {
+    /* Top Right Settings */
+    .settings-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.4);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.3s, transform 0.2s;
+    }
+    
+    .settings-btn:hover { transform: rotate(45deg); background: rgba(0,0,0,0.6); }
+
+    .settings-menu {
+      position: absolute;
+      top: 60px;
+      right: 15px;
+      background: rgba(28, 28, 28, 0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      width: 180px;
+      display: none;
+      flex-direction: column;
+      padding: 8px 0;
+      z-index: 30;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .settings-menu.active { display: flex; }
+
+    .menu-item {
+      padding: 12px 16px;
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      transition: background 0.2s;
+    }
+    .menu-item:hover { background: rgba(255,255,255,0.1); }
+
+    /* Center Play/Pause */
+    .center-play {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 72px;
-      height: 72px;
-      background: rgba(255, 255, 255, 0.95);
+      width: 70px;
+      height: 70px;
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      z-index: 10;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      pointer-events: none; /* Let clicks pass through to the video logic */
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity 0.3s;
     }
 
-    .video-container:hover .center-play-btn {
-        transform: translate(-50%, -50%) scale(1.05);
-    }
-
-    .center-play-btn svg {
-      width: 28px;
-      height: 28px;
-      fill: #000000;
-      margin-left: 4px;
-    }
-
-    /* Bottom Controls Container */
+    /* Bottom Controls */
     .controls-overlay {
       position: absolute;
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-      padding: 12px 16px 12px 16px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      padding: 10px 15px 15px 15px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      transition: opacity 0.3s ease;
+      gap: 10px;
       z-index: 10;
+      transition: opacity 0.3s;
     }
 
-    /* Auto-hide class when playing */
-    .video-container.user-inactive .controls-overlay,
-    .video-container.user-inactive .center-play-btn {
+    /* Auto-hide logic */
+    .video-container.inactive .controls-overlay,
+    .video-container.inactive .settings-btn,
+    .video-container.inactive .center-play {
       opacity: 0;
       pointer-events: none;
     }
 
-    .controls-top-row {
+    .controls-row {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
-      color: #ffffff;
+    }
+
+    .time-box {
+      color: #fff;
       font-size: 14px;
-    }
-
-    .time-display {
       font-variant-numeric: tabular-nums;
-      color: #e0e0e0;
     }
 
-    .action-buttons {
+    .action-group {
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 12px;
     }
 
-    .btn {
+    .ctrl-btn {
       background: none;
       border: none;
-      color: #ffffff;
+      color: #fff;
       cursor: pointer;
-      display: flex;
-      align-items: center;
       padding: 5px;
       border-radius: 50%;
-    }
-
-    .btn svg {
-      width: 22px;
-      height: 22px;
-      fill: #ffffff;
-    }
-
-    /* Progress Bar (Bottom Row) */
-    .progress-container {
-      width: 100%;
       display: flex;
       align-items: center;
     }
 
-    .progress-bar {
+    .ctrl-btn svg { width: 24px; height: 24px; fill: #fff; }
+
+    /* Progress Bar styling */
+    .prog-container { width: 100%; display: flex; align-items: center; }
+    
+    .prog-bar {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
@@ -158,126 +182,96 @@
       cursor: pointer;
     }
 
-    /* Progress Bar Thumb (The Dot) */
-    .progress-bar::-webkit-slider-thumb {
+    /* Red Dot */
+    .prog-bar::-webkit-slider-thumb {
       -webkit-appearance: none;
-      appearance: none;
       width: 14px;
       height: 14px;
       border-radius: 50%;
-      background: var(--progress-dot-color);
+      background: var(--progress-dot);
       cursor: pointer;
-      border: 1px solid rgba(0,0,0,0.1);
-      box-shadow: 0 0 2px rgba(0,0,0,0.5);
+      box-shadow: 0 0 5px rgba(0,0,0,0.5);
     }
-
-    .progress-bar::-moz-range-thumb {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: var(--progress-dot-color);
-      border: none;
+    .prog-bar::-moz-range-thumb {
+      width: 14px; height: 14px; border-radius: 50%;
+      background: var(--progress-dot); border: none;
     }
-
-    /* Options Menu */
-    .options-menu {
-      position: absolute;
-      bottom: 60px;
-      right: 16px;
-      background: rgba(30, 30, 30, 0.95);
-      border-radius: 8px;
-      padding: 8px 0;
-      display: none;
-      flex-direction: column;
-      z-index: 25;
-      width: 170px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    }
-
-    .options-menu.active { display: flex; }
-
-    .menu-item {
-      padding: 12px 16px;
-      color: #fff;
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .menu-item:hover { background-color: rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
 
-  <div class="video-container" id="videoContainer">
-    <video id="video" playsinline>
+  <div class="video-container" id="player">
+    <video id="mainVideo" playsinline>
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
     </video>
 
-    <!-- Center Play/Pause Overlay -->
-    <div class="center-play-btn" id="centerPlayBtn">
-      <svg id="centerPlayIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    <!-- Settings at Top Right -->
+    <button class="settings-btn" id="setBtn">
+      <svg viewBox="0 0 24 24" fill="white" width="24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    </button>
+
+    <div class="settings-menu" id="setMenu">
+      <div class="menu-item" id="speedOption">Speed <span id="speedTxt">1x</span></div>
+      <div class="menu-item" id="pipOption">Picture-in-Picture</div>
     </div>
 
-    <div class="options-menu" id="optionsMenu">
-      <div class="menu-item" id="speedToggle">Playback Speed: <span id="speedText">1x</span></div>
-      <div class="menu-item" id="pipBtn">Picture-in-Picture</div>
+    <!-- Center Play/Pause -->
+    <div class="center-play" id="centerPlay">
+       <svg id="playIcon" viewBox="0 0 24 24" width="30"><path d="M8 5v14l11-7z" fill="black"/></svg>
     </div>
 
-    <!-- Controls Overlay -->
-    <div class="controls-overlay" id="controlsOverlay">
-      <div class="controls-top-row">
-        <div class="time-display">
-          <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+    <!-- Bottom Controls -->
+    <div class="controls-overlay">
+      <div class="controls-row">
+        <div class="time-box">
+          <span id="currTime">0:00</span> / <span id="duration">0:00</span>
         </div>
-        <div class="action-buttons">
-          <button class="btn" id="volumeBtn"><svg id="volumeIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg></button>
-          <button class="btn" id="fullscreenBtn"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
-          <button class="btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></button>
+        
+        <div class="action-group">
+          <!-- Volume Button -->
+          <button class="ctrl-btn" id="volBtn">
+            <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          </button>
+          <!-- Fullscreen Button -->
+          <button class="ctrl-btn" id="fullBtn">
+            <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </button>
         </div>
       </div>
-      <div class="progress-container">
-        <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0" step="0.1">
+
+      <div class="prog-container">
+        <input type="range" class="prog-bar" id="progBar" min="0" max="100" value="0" step="0.1">
       </div>
     </div>
   </div>
 
   <script>
-    const container = document.getElementById('videoContainer');
-    const video = document.getElementById('video');
-    const centerBtn = document.getElementById('centerPlayBtn');
-    const centerIcon = document.getElementById('centerPlayIcon');
-    const progressBar = document.getElementById('progressBar');
-    const currentTimeEl = document.getElementById('currentTime');
-    const durationEl = document.getElementById('duration');
-    const volumeBtn = document.getElementById('volumeBtn');
-    const volumeIcon = document.getElementById('volumeIcon');
-    const menuBtn = document.getElementById('menuBtn');
-    const optionsMenu = document.getElementById('optionsMenu');
+    const player = document.getElementById('player');
+    const video = document.getElementById('mainVideo');
+    const progBar = document.getElementById('progBar');
+    const currTimeEl = document.getElementById('currTime');
+    const durEl = document.getElementById('duration');
+    const setBtn = document.getElementById('setBtn');
+    const setMenu = document.getElementById('setMenu');
+    const playIcon = document.getElementById('playIcon');
+    const speedTxt = document.getElementById('speedTxt');
 
-    let clickTimer = null;
+    let clickTimeout;
 
-    // Handle Single Click (Play/Pause) and Double Click (Seek)
+    // Handle Clicks/Double Clicks on Video
     video.addEventListener('click', (e) => {
       if (e.detail === 1) {
-        // Single Click logic - delayed to check for double click
-        clickTimer = setTimeout(() => {
-          togglePlay();
-        }, 250);
+        clickTimeout = setTimeout(() => togglePlay(), 250);
       }
     });
 
     video.addEventListener('dblclick', (e) => {
-      // Double Click logic - cancels the pending single click
-      clearTimeout(clickTimer);
-      
+      clearTimeout(clickTimeout);
       const rect = video.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      
       if (x < rect.width / 2) {
-        // Left Side: Back 10s
         video.currentTime = Math.max(0, video.currentTime - 10);
       } else {
-        // Right Side: Forward 10s
         video.currentTime = Math.min(video.duration, video.currentTime + 10);
       }
     });
@@ -287,62 +281,78 @@
       else video.pause();
     }
 
-    video.addEventListener('play', () => {
-      centerIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause Icon
-      centerBtn.style.opacity = '0';
-    });
-
-    video.addEventListener('pause', () => {
-      centerIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; // Play Icon
-      centerBtn.style.opacity = '1';
-      container.classList.remove('user-inactive');
-    });
-
-    // Formatting
-    const formatTime = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
-
-    video.addEventListener('timeupdate', () => {
-      currentTimeEl.textContent = formatTime(video.currentTime);
-      const percent = (video.currentTime / video.duration) * 100 || 0;
-      progressBar.value = percent;
-      // Orange fill behind the red dot
-      progressBar.style.background = `linear-gradient(to right, var(--progress-fill-color) ${percent}%, rgba(255, 255, 255, 0.2) ${percent}%)`;
-    });
-
-    video.addEventListener('loadedmetadata', () => {
-      durationEl.textContent = formatTime(video.duration);
-    });
-
-    progressBar.addEventListener('input', (e) => {
-      video.currentTime = (e.target.value / 100) * video.duration;
-    });
-
-    volumeBtn.addEventListener('click', () => {
-      video.muted = !video.muted;
-      volumeIcon.style.opacity = video.muted ? '0.5' : '1';
-    });
-
-    document.getElementById('fullscreenBtn').addEventListener('click', () => {
-      if (!document.fullscreenElement) container.requestFullscreen();
-      else document.exitFullscreen();
-    });
-
-    menuBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      optionsMenu.classList.toggle('active');
-    });
-
-    document.addEventListener('click', () => optionsMenu.classList.remove('active'));
-
-    // Auto-hide controls
-    let hideTimer;
-    const resetTimer = () => {
-      container.classList.remove('user-inactive');
-      clearTimeout(hideTimer);
-      if (!video.paused) hideTimer = setTimeout(() => container.classList.add('user-inactive'), 3000);
+    video.onplay = () => {
+      document.getElementById('centerPlay').style.opacity = '0';
+      playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="black"/>';
     };
-    container.addEventListener('mousemove', resetTimer);
-    container.addEventListener('touchstart', resetTimer);
+    video.onpause = () => {
+      document.getElementById('centerPlay').style.opacity = '1';
+      playIcon.innerHTML = '<path d="M8 5v14l11-7z" fill="black"/>';
+      player.classList.remove('inactive');
+    };
+
+    // Time & Progress Update
+    const fmt = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
+
+    video.ontimeupdate = () => {
+      currTimeEl.textContent = fmt(video.currentTime);
+      const p = (video.currentTime / video.duration) * 100 || 0;
+      progBar.value = p;
+      progBar.style.background = `linear-gradient(to right, var(--progress-fill) ${p}%, rgba(255,255,255,0.2) ${p}%)`;
+    };
+
+    video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
+
+    progBar.oninput = (e) => {
+      video.currentTime = (e.target.value / 100) * video.duration;
+    };
+
+    // Controls Logic
+    document.getElementById('volBtn').onclick = () => {
+      video.muted = !video.muted;
+      document.getElementById('volIcon').style.opacity = video.muted ? 0.4 : 1;
+    };
+
+    document.getElementById('fullBtn').onclick = () => {
+      if (!document.fullscreenElement) player.requestFullscreen();
+      else document.exitFullscreen();
+    };
+
+    // Settings Menu Logic
+    setBtn.onclick = (e) => {
+      e.stopPropagation();
+      setMenu.classList.toggle('active');
+    };
+
+    document.onclick = () => setMenu.classList.remove('active');
+
+    // Speed Toggle
+    const speeds = [1, 1.25, 1.5, 2, 0.5];
+    let sIdx = 0;
+    document.getElementById('speedOption').onclick = (e) => {
+      e.stopPropagation();
+      sIdx = (sIdx + 1) % speeds.length;
+      video.playbackRate = speeds[sIdx];
+      speedTxt.textContent = speeds[sIdx] + 'x';
+    };
+
+    // Picture-in-Picture
+    document.getElementById('pipOption').onclick = async () => {
+      try {
+        if (video !== document.pictureInPictureElement) await video.requestPictureInPicture();
+        else await document.exitPictureInPicture();
+      } catch (err) { console.error(err); }
+    };
+
+    // Auto-hide Controls
+    let hT;
+    const resetH = () => {
+      player.classList.remove('inactive');
+      clearTimeout(hT);
+      if (!video.paused) hT = setTimeout(() => player.classList.add('inactive'), 3000);
+    };
+    player.onmousemove = resetH;
+    player.ontouchstart = resetH;
   </script>
 </body>
 </html>
