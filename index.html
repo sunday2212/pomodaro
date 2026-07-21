@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Native Style Video Player</title>
+  <title>Native Style Video Player Pro</title>
   <style>
     :root {
-      /* You can adjust these colors as needed */
       --progress-fill-color: #ff5722; /* Orange progress bar */
       --progress-dot-color: #ff0000;  /* Red progress bar dot */
       --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -16,6 +15,9 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      /* REMOVES BLUE FLASH ON CLICK/TAP */
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
     }
 
     body {
@@ -25,6 +27,7 @@
       align-items: center;
       min-height: 100vh;
       font-family: var(--font-family);
+      overflow: hidden;
     }
 
     /* Video Player Container */
@@ -35,7 +38,9 @@
       background-color: #000;
       border-radius: 8px;
       overflow: hidden;
+      /* PREVENTS HIGHLIGHTING/BLUE FLASH */
       user-select: none;
+      -webkit-user-select: none;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
@@ -54,7 +59,7 @@
       transform: translate(-50%, -50%);
       width: 72px;
       height: 72px;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -63,18 +68,18 @@
       z-index: 10;
       transition: opacity 0.2s ease, transform 0.2s ease;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      pointer-events: none; /* Let clicks pass through to the video logic */
     }
 
-    .center-play-btn:hover {
-      transform: translate(-50%, -50%) scale(1.08);
-      background: #ffffff;
+    .video-container:hover .center-play-btn {
+        transform: translate(-50%, -50%) scale(1.05);
     }
 
     .center-play-btn svg {
       width: 28px;
       height: 28px;
       fill: #000000;
-      margin-left: 4px; /* Optical adjustment for triangle */
+      margin-left: 4px;
     }
 
     /* Bottom Controls Container */
@@ -83,11 +88,11 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
-      padding: 12px 16px 8px 16px;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+      padding: 12px 16px 12px 16px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       transition: opacity 0.3s ease;
       z-index: 10;
     }
@@ -99,26 +104,23 @@
       pointer-events: none;
     }
 
-    /* Controls Top Row (Time & Action Buttons) */
     .controls-top-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       color: #ffffff;
       font-size: 14px;
-      font-weight: 400;
     }
 
     .time-display {
       font-variant-numeric: tabular-nums;
-      letter-spacing: 0.5px;
       color: #e0e0e0;
     }
 
     .action-buttons {
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 15px;
     }
 
     .btn {
@@ -128,14 +130,8 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 4px;
+      padding: 5px;
       border-radius: 50%;
-      transition: background-color 0.2s ease;
-    }
-
-    .btn:hover {
-      background-color: rgba(255, 255, 255, 0.2);
     }
 
     .btn svg {
@@ -149,26 +145,20 @@
       width: 100%;
       display: flex;
       align-items: center;
-      padding: 4px 0;
     }
 
     .progress-bar {
       -webkit-appearance: none;
       appearance: none;
       width: 100%;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.3);
+      height: 5px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.2);
       outline: none;
       cursor: pointer;
-      transition: height 0.1s ease;
     }
 
-    .progress-container:hover .progress-bar {
-      height: 6px;
-    }
-
-    /* Progress Bar Thumb (Dot) for Chrome/Edge/Safari */
+    /* Progress Bar Thumb (The Dot) */
     .progress-bar::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
@@ -177,66 +167,50 @@
       border-radius: 50%;
       background: var(--progress-dot-color);
       cursor: pointer;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-      transition: transform 0.1s ease;
+      border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 0 2px rgba(0,0,0,0.5);
     }
 
-    .progress-container:hover .progress-bar::-webkit-slider-thumb {
-      transform: scale(1.1);
-    }
-
-    /* Progress Bar Thumb for Firefox */
     .progress-bar::-moz-range-thumb {
       width: 14px;
       height: 14px;
       border-radius: 50%;
       background: var(--progress-dot-color);
       border: none;
-      cursor: pointer;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
     }
 
-    /* Options Menu (3 dots) */
+    /* Options Menu */
     .options-menu {
       position: absolute;
-      bottom: 50px;
+      bottom: 60px;
       right: 16px;
-      background: rgba(28, 28, 28, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(30, 30, 30, 0.95);
       border-radius: 8px;
       padding: 8px 0;
       display: none;
       flex-direction: column;
-      z-index: 20;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      width: 160px;
+      z-index: 25;
+      width: 170px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
 
-    .options-menu.active {
-      display: flex;
-    }
+    .options-menu.active { display: flex; }
 
     .menu-item {
-      padding: 10px 16px;
+      padding: 12px 16px;
       color: #fff;
       font-size: 13px;
       cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
-    .menu-item:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
+    .menu-item:hover { background-color: rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
 
   <div class="video-container" id="videoContainer">
-    <video id="video" preload="metadata">
+    <video id="video" playsinline>
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
-      Your browser does not support the video tag.
     </video>
 
     <!-- Center Play/Pause Overlay -->
@@ -244,46 +218,23 @@
       <svg id="centerPlayIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
     </div>
 
-    <!-- Options Menu -->
     <div class="options-menu" id="optionsMenu">
-      <div class="menu-item" id="speedToggle">Speed: <span id="speedText">1.0x</span></div>
+      <div class="menu-item" id="speedToggle">Playback Speed: <span id="speedText">1x</span></div>
       <div class="menu-item" id="pipBtn">Picture-in-Picture</div>
-      <a id="downloadBtn" class="menu-item" style="text-decoration: none;" download target="_blank">Download</a>
     </div>
 
-    <!-- Bottom Controls Overlay -->
+    <!-- Controls Overlay -->
     <div class="controls-overlay" id="controlsOverlay">
-      <!-- Top Row: Time & Control Icons -->
       <div class="controls-top-row">
         <div class="time-display">
           <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
         </div>
-
         <div class="action-buttons">
-          <!-- Volume Button -->
-          <button class="btn" id="volumeBtn" title="Mute/Unmute">
-            <svg id="volumeIcon" viewBox="0 0 24 24">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-            </svg>
-          </button>
-
-          <!-- Fullscreen Button -->
-          <button class="btn" id="fullscreenBtn" title="Fullscreen">
-            <svg id="fullscreenIcon" viewBox="0 0 24 24">
-              <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
-            </svg>
-          </button>
-
-          <!-- 3-Dots Menu Button -->
-          <button class="btn" id="menuBtn" title="Options">
-            <svg viewBox="0 0 24 24">
-              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-          </button>
+          <button class="btn" id="volumeBtn"><svg id="volumeIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg></button>
+          <button class="btn" id="fullscreenBtn"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg></button>
+          <button class="btn" id="menuBtn"><svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></button>
         </div>
       </div>
-
-      <!-- Bottom Row: Seek Bar -->
       <div class="progress-container">
         <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0" step="0.1">
       </div>
@@ -291,144 +242,107 @@
   </div>
 
   <script>
-    const videoContainer = document.getElementById('videoContainer');
+    const container = document.getElementById('videoContainer');
     const video = document.getElementById('video');
-    const centerPlayBtn = document.getElementById('centerPlayBtn');
-    const centerPlayIcon = document.getElementById('centerPlayIcon');
+    const centerBtn = document.getElementById('centerPlayBtn');
+    const centerIcon = document.getElementById('centerPlayIcon');
     const progressBar = document.getElementById('progressBar');
     const currentTimeEl = document.getElementById('currentTime');
     const durationEl = document.getElementById('duration');
     const volumeBtn = document.getElementById('volumeBtn');
     const volumeIcon = document.getElementById('volumeIcon');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
     const menuBtn = document.getElementById('menuBtn');
     const optionsMenu = document.getElementById('optionsMenu');
-    const speedToggle = document.getElementById('speedToggle');
-    const speedText = document.getElementById('speedText');
-    const pipBtn = document.getElementById('pipBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
 
-    // SVG Icons
-    const playSvg = '<path d="M8 5v14l11-7z"/>';
-    const pauseSvg = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-    const volumeHighSvg = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
-    const volumeMuteSvg = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+    let clickTimer = null;
 
-    downloadBtn.href = video.querySelector('source').src;
-
-    // Toggle Play/Pause
-    function togglePlay() {
-      if (video.paused) {
-        video.play();
-      } else {
-        video.pause();
+    // Handle Single Click (Play/Pause) and Double Click (Seek)
+    video.addEventListener('click', (e) => {
+      if (e.detail === 1) {
+        // Single Click logic - delayed to check for double click
+        clickTimer = setTimeout(() => {
+          togglePlay();
+        }, 250);
       }
+    });
+
+    video.addEventListener('dblclick', (e) => {
+      // Double Click logic - cancels the pending single click
+      clearTimeout(clickTimer);
+      
+      const rect = video.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      
+      if (x < rect.width / 2) {
+        // Left Side: Back 10s
+        video.currentTime = Math.max(0, video.currentTime - 10);
+      } else {
+        // Right Side: Forward 10s
+        video.currentTime = Math.min(video.duration, video.currentTime + 10);
+      }
+    });
+
+    function togglePlay() {
+      if (video.paused) video.play();
+      else video.pause();
     }
 
-    video.addEventListener('click', togglePlay);
-    centerPlayBtn.addEventListener('click', togglePlay);
-
     video.addEventListener('play', () => {
-      centerPlayIcon.innerHTML = pauseSvg;
-      centerPlayBtn.style.opacity = '0';
-      centerPlayBtn.style.pointerEvents = 'none';
+      centerIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause Icon
+      centerBtn.style.opacity = '0';
     });
 
     video.addEventListener('pause', () => {
-      centerPlayIcon.innerHTML = playSvg;
-      centerPlayBtn.style.opacity = '1';
-      centerPlayBtn.style.pointerEvents = 'auto';
-      videoContainer.classList.remove('user-inactive');
+      centerIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; // Play Icon
+      centerBtn.style.opacity = '1';
+      container.classList.remove('user-inactive');
     });
 
-    // Format time in M:SS
-    function formatTime(seconds) {
-      if (isNaN(seconds)) return "0:00";
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
-
-    // Update Progress Bar & Time
-    video.addEventListener('loadedmetadata', () => {
-      durationEl.textContent = formatTime(video.duration);
-    });
+    // Formatting
+    const formatTime = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
 
     video.addEventListener('timeupdate', () => {
       currentTimeEl.textContent = formatTime(video.currentTime);
       const percent = (video.currentTime / video.duration) * 100 || 0;
       progressBar.value = percent;
-      
-      // Dynamic Progress Bar Background (Orange fill behind dot)
-      progressBar.style.background = `linear-gradient(to right, var(--progress-fill-color) ${percent}%, rgba(255, 255, 255, 0.3) ${percent}%)`;
+      // Orange fill behind the red dot
+      progressBar.style.background = `linear-gradient(to right, var(--progress-fill-color) ${percent}%, rgba(255, 255, 255, 0.2) ${percent}%)`;
     });
 
-    // Seek Video
+    video.addEventListener('loadedmetadata', () => {
+      durationEl.textContent = formatTime(video.duration);
+    });
+
     progressBar.addEventListener('input', (e) => {
-      const seekTime = (e.target.value / 100) * video.duration;
-      video.currentTime = seekTime;
+      video.currentTime = (e.target.value / 100) * video.duration;
     });
 
-    // Volume Toggle
     volumeBtn.addEventListener('click', () => {
       video.muted = !video.muted;
-      volumeIcon.innerHTML = video.muted ? volumeMuteSvg : volumeHighSvg;
+      volumeIcon.style.opacity = video.muted ? '0.5' : '1';
     });
 
-    // Fullscreen Toggle
-    fullscreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        videoContainer.requestFullscreen().catch(err => alert(err.message));
-      } else {
-        document.exitFullscreen();
-      }
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!document.fullscreenElement) container.requestFullscreen();
+      else document.exitFullscreen();
     });
 
-    // 3-Dots Options Menu
     menuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       optionsMenu.classList.toggle('active');
     });
 
-    document.addEventListener('click', () => {
-      optionsMenu.classList.remove('active');
-    });
+    document.addEventListener('click', () => optionsMenu.classList.remove('active'));
 
-    // Speed Controls
-    const speeds = [1.0, 1.25, 1.5, 2.0, 0.5];
-    let currentSpeedIdx = 0;
-
-    speedToggle.addEventListener('click', () => {
-      currentSpeedIdx = (currentSpeedIdx + 1) % speeds.length;
-      const speed = speeds[currentSpeedIdx];
-      video.playbackRate = speed;
-      speedText.textContent = `${speed}x`;
-    });
-
-    // Picture in Picture
-    pipBtn.addEventListener('click', async () => {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-      } else if (document.pictureInPictureEnabled) {
-        await video.requestPictureInPicture();
-      }
-    });
-
-    // Auto-hide Controls on Idle
-    let hideTimeout;
-    function resetHideTimeout() {
-      videoContainer.classList.remove('user-inactive');
-      clearTimeout(hideTimeout);
-      if (!video.paused) {
-        hideTimeout = setTimeout(() => {
-          videoContainer.classList.add('user-inactive');
-          optionsMenu.classList.remove('active');
-        }, 2500);
-      }
-    }
-
-    videoContainer.addEventListener('mousemove', resetHideTimeout);
-    videoContainer.addEventListener('touchstart', resetHideTimeout);
+    // Auto-hide controls
+    let hideTimer;
+    const resetTimer = () => {
+      container.classList.remove('user-inactive');
+      clearTimeout(hideTimer);
+      if (!video.paused) hideTimer = setTimeout(() => container.classList.add('user-inactive'), 3000);
+    };
+    container.addEventListener('mousemove', resetTimer);
+    container.addEventListener('touchstart', resetTimer);
   </script>
 </body>
 </html>
