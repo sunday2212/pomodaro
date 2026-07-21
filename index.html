@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Video Player - YouTube Style Seekbar</title>
+  <title>Pro Video Player - Ultimate YouTube Style</title>
   <style>
     :root {
       --progress-played: #ff5722;   /* Orange Played */
@@ -43,7 +43,18 @@
 
     video { width: 100%; height: 100%; display: block; cursor: pointer; }
 
-    /* YOUTUBE STYLE BUFFERING SPINNER */
+    /* TOP SHADOW GRADIENT (YouTube Style) */
+    .top-controls-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+      z-index: 10;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    /* BUFFERING SPINNER */
     .buffer-overlay {
       position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
       z-index: 15; display: none; pointer-events: none;
@@ -60,6 +71,7 @@
       position: absolute; top: 15px; right: 15px; z-index: 20;
       background: none; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.3s;
     }
 
     .settings-menu {
@@ -106,7 +118,8 @@
     /* AUTO-HIDE WRAPPER */
     .video-container.inactive .controls-overlay,
     .video-container.inactive .settings-btn,
-    .video-container.inactive .center-play {
+    .video-container.inactive .center-play,
+    .video-container.inactive .top-controls-bg {
       opacity: 0; pointer-events: none;
     }
 
@@ -138,7 +151,6 @@
       width: 100%;
       height: 4px;
       border-radius: 2px;
-      /* Default background is overridden by JS Gradient */
       background: var(--progress-bg);
       outline: none;
       cursor: pointer;
@@ -155,14 +167,18 @@
 <body>
 
   <div class="video-container" id="player">
-    <video id="mainVideo" playsinline preload="auto">
+    <video id="mainVideo" playsinline preload="auto" crossorigin="anonymous">
       <source src="https://stream.mux.com/BV3YZtogl89mg9VcNBhhnHm02Y34zI1nlMuMQfAbl3dM/highest.mp4" type="video/mp4">
     </video>
+
+    <!-- Top Shadow UI Overlay -->
+    <div class="top-controls-bg" id="topShadow"></div>
 
     <div class="buffer-overlay" id="bufferSpinner">
       <div class="spinner"></div>
     </div>
 
+    <!-- Correct Settings Icon restored -->
     <button class="settings-btn" id="setBtn">
       <svg viewBox="0 0 24 24" fill="white" width="28"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     </button>
@@ -254,11 +270,9 @@
     video.onplay = () => { playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="black"/>'; resetHideTimer(); };
     video.onpause = () => { playIcon.innerHTML = '<path d="M8 5v14l11-7z" fill="black"/>'; showUI(); };
 
-    // SEEKBAR GRADIENT UPDATE (Played + Buffered + Background)
+    // SEEKBAR GRADIENT UPDATE
     function updateProgressBar() {
         const played = (video.currentTime / video.duration) * 100 || 0;
-        
-        // Find the buffer range that contains or follows the current time
         let bufferedEnd = 0;
         if (video.buffered.length > 0) {
             for (let i = 0; i < video.buffered.length; i++) {
@@ -269,8 +283,6 @@
         }
         const buffered = (bufferedEnd / video.duration) * 100 || 0;
 
-        // Apply a multi-color gradient:
-        // Orange (Played) -> White (Buffered) -> Dark Gray (Background)
         progBar.value = played;
         progBar.style.background = `linear-gradient(to right, 
             var(--progress-played) 0%, 
@@ -282,20 +294,10 @@
     }
 
     const fmt = (s) => isNaN(s) ? "0:00" : `${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;
-    
-    video.ontimeupdate = () => {
-        currTimeEl.textContent = fmt(video.currentTime);
-        updateProgressBar();
-    };
-
-    // Listen for download progress to update the white bar
+    video.ontimeupdate = () => { currTimeEl.textContent = fmt(video.currentTime); updateProgressBar(); };
     video.addEventListener('progress', updateProgressBar);
-
     video.onloadedmetadata = () => durEl.textContent = fmt(video.duration);
-    progBar.oninput = (e) => { 
-        video.currentTime = (e.target.value / 100) * video.duration; 
-        resetHideTimer(); 
-    };
+    progBar.oninput = (e) => { video.currentTime = (e.target.value / 100) * video.duration; resetHideTimer(); };
 
     // SETTINGS / SPEED LOGIC
     setBtn.onclick = (e) => { e.stopPropagation(); setMenu.classList.toggle('active'); resetHideTimer(); };
