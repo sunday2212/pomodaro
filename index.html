@@ -16,6 +16,8 @@
             --secondary: #ffffff;
             --bg-dark: #1a202c;
             --accent: #4fd1c7;
+            --header-h: 65px;
+            --toolbar-h: 50px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,58 +32,63 @@
             color: var(--secondary);
         }
 
-        /* --- Row 1: Brand Header --- */
-        .header-main {
+        /* --- NEXTPULSE Header (Row 1) --- */
+        .brand-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
+            padding: 0 20px;
             background: var(--primary);
-            z-index: 1000;
+            height: var(--header-h);
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        .logo-box { display: flex; align-items: center; gap: 10px; }
-        .logo-box i { font-size: 1.6rem; color: var(--accent); }
-        .logo-box h1 { font-size: 1.2rem; font-weight: 800; color: white; letter-spacing: 1px; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area i { font-size: 1.8rem; color: var(--accent); }
+        .logo-area h1 { font-size: 1.3rem; font-weight: 800; color: white; letter-spacing: 1px; }
 
         .back-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 6px 15px;
+            padding: 7px 14px;
             border-radius: 8px;
             text-decoration: none;
             font-size: 13px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
 
-        /* --- Row 2: Navigation Toolbar --- */
-        .toolbar {
+        /* --- Toolbar (Row 2) --- */
+        .nav-toolbar {
             background: #2d3748;
+            height: var(--toolbar-h);
             display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
-            z-index: 999;
+            z-index: 1000;
         }
 
         .tool-link {
             color: #cbd5e0;
-            text-align: center;
             cursor: pointer;
-            font-size: 11px;
-            text-decoration: none;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
             transition: 0.2s;
-            flex: 1;
+            border-radius: 5px;
         }
-        .tool-link i { display: block; font-size: 16px; margin-bottom: 3px; }
-        .tool-link:hover { color: white; }
+        .tool-link:hover { color: white; background: rgba(255,255,255,0.05); }
 
-        /* --- Viewer Area --- */
-        #app-content {
+        /* --- Viewer Workspace --- */
+        #viewer-workspace {
             flex: 1;
             display: flex;
             justify-content: center;
@@ -89,44 +96,53 @@
             padding: 20px;
             position: relative;
             background: radial-gradient(circle, #2d3748 0%, #1a202c 100%);
+            transition: all 0.3s ease;
         }
 
         #book-container {
             visibility: hidden;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Fullscreen "One Page" View Logic */
+        body.fullscreen-active #viewer-workspace {
+            position: fixed;
+            top: var(--header-h); /* Keep Header constant */
+            left: 0;
+            width: 100vw;
+            height: calc(100vh - var(--header-h));
+            z-index: 2000;
+            background: #000;
+            padding: 5px;
         }
 
         .page { background-color: white; overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
 
-        /* --- Side Panels --- */
+        /* --- Panels --- */
         .panel {
             position: fixed;
-            top: 0;
-            left: -350px;
-            width: 320px;
-            height: 100%;
-            background: var(--secondary);
-            color: #333;
+            top: 0; left: -350px;
+            width: 320px; height: 100%;
+            background: var(--secondary); color: #333;
             transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 2000;
+            z-index: 3000;
             box-shadow: 15px 0 50px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
+            display: flex; flex-direction: column;
         }
         .panel.active { left: 0; }
         .panel-header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .panel-content { flex: 1; overflow-y: auto; }
 
-        .search-box { width: 90%; margin: 15px auto; padding: 12px; border-radius: 8px; border: 2px solid #edf2f7; display: block; outline: none; }
-        .list-item { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .search-box { width: 90%; margin: 15px auto; padding: 12px; border-radius: 8px; border: 2px solid #edf2f7; display: block; }
+        .list-item { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
         .list-item:hover { background: #f8fafc; color: var(--primary); font-weight: 600; }
         .list-item span { color: #a0aec0; font-size: 10px; }
 
         /* --- Footer --- */
         footer {
             background: #1e293b;
-            padding: 10px 20px;
+            padding: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -134,31 +150,23 @@
             z-index: 1000;
         }
 
-        .p-btn {
-            background: var(--primary);
-            border: none;
-            color: white;
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        .nav-btn {
+            background: var(--primary); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
         }
-
-        /* Fullscreen Fix */
-        #app-content:fullscreen { padding: 0; background: black; }
 
         #loading-overlay {
             position: fixed; inset: 0; background: #0f172a;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000;
         }
         .spinner { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        @media (max-width: 500px) {
-            .logo-box h1 { font-size: 1rem; }
-            .header-main { padding: 10px; }
-            #app-content { padding: 5px; }
-            .viewer-area { padding: 5px; }
+        @media (max-width: 600px) {
+            .logo-area h1 { font-size: 1.1rem; }
+            .tool-link span { display: none; }
+            .tool-link i { font-size: 18px; }
+            #viewer-workspace { padding: 5px; }
         }
     </style>
 </head>
@@ -166,31 +174,31 @@
 
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <p style="margin-top:15px; font-weight:600;">Loading Medical Notebook...</p>
+        <p style="margin-top:15px; font-weight:600;">Opening Notebook...</p>
         <small id="load-progress" style="color: var(--accent);">0%</small>
     </div>
 
-    <!-- Row 1 -->
-    <header class="header-main">
-        <div class="logo-box">
+    <!-- Row 1: Brand -->
+    <header class="brand-header">
+        <div class="logo-area">
             <i class="fas fa-heartbeat"></i>
             <h1>NEXTPULSE</h1>
         </div>
         <a href="javascript:history.back()" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> <span>Back</span>
         </a>
     </header>
 
-    <!-- Row 2 -->
-    <nav class="toolbar">
-        <div class="tool-link" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i>Index</div>
-        <div class="tool-link" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i>Search</div>
-        <div class="tool-link" onclick="toggleFullscreen()"><i class="fas fa-expand"></i>Fullscreen</div>
-        <div class="tool-link" id="btnSound"><i class="fas fa-volume-up"></i>Audio</div>
+    <!-- Row 2: Controls -->
+    <nav class="nav-toolbar">
+        <div class="tool-link" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i><span>Index</span></div>
+        <div class="tool-link" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i><span>Search</span></div>
+        <div class="tool-link" onclick="handleCustomFullscreen()"><i class="fas fa-expand-arrows-alt"></i><span>Full Screen</span></div>
+        <div class="tool-link" id="btnSound"><i class="fas fa-volume-up"></i><span>Sound</span></div>
     </nav>
 
-    <!-- Book Viewer -->
-    <div id="app-content">
+    <!-- Content -->
+    <div id="viewer-workspace">
         <div id="book-container"></div>
     </div>
 
@@ -200,17 +208,17 @@
     </div>
 
     <div id="searchPanel" class="panel">
-        <div class="panel-header"><h3>Search Case</h3><i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i></div>
-        <input type="text" class="search-box" id="searchInput" placeholder="Search diagnosis...">
+        <div class="panel-header"><h3>Search Condition</h3><i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i></div>
+        <input type="text" class="search-box" id="searchInput" placeholder="Type here...">
         <div class="panel-content" id="searchResults"></div>
     </div>
 
     <footer>
-        <button class="p-btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
+        <button class="nav-btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
         <div style="font-weight: 600; width: 100px; text-align: center;">
             <span id="pageCurrent" style="color: var(--accent);">1</span> / 52
         </div>
-        <button class="p-btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
+        <button class="nav-btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
     </footer>
 
     <script>
@@ -220,8 +228,9 @@
         let pdfDoc = null;
         let pageFlip = null;
         let isSoundEnabled = true;
+        let isFullscreen = false;
 
-        const caseData = [
+        const indexData = [
             { t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 }, { t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
             { t: "COUGH (PRODUCTIVE)", p: 5 }, { t: "HEADACHE (RECURRENT)", p: 6 },
             { t: "NEUROPATHIC PAIN", p: 7 }, { t: "BLOATING / GAS / FULLNESS", p: 8 },
@@ -249,14 +258,13 @@
             { t: "ORAL CONTRACEPTIVE PILLS", p: 51 }, { t: "EMERGENCY CONTRACEPTION", p: 52 }
         ];
 
-        async function initFlipbook() {
+        async function initApp() {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
             try {
-                const doc = await pdfjsLib.getDocument(PDF_URL).promise;
-                pdfDoc = doc;
+                pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
                 const container = document.getElementById('book-container');
-                for (let i = 1; i <= doc.numPages; i++) {
-                    const page = await doc.getPage(i);
+                for (let i = 1; i <= pdfDoc.numPages; i++) {
+                    const page = await pdfDoc.getPage(i);
                     const viewport = page.getViewport({ scale: 2 });
                     const canvas = document.createElement('canvas');
                     canvas.height = viewport.height; canvas.width = viewport.width;
@@ -264,18 +272,27 @@
                     const div = document.createElement('div');
                     div.className = 'page'; div.appendChild(canvas);
                     container.appendChild(div);
-                    document.getElementById('load-progress').innerText = Math.round((i/doc.numPages)*100) + '%';
+                    document.getElementById('load-progress').innerText = Math.round((i/pdfDoc.numPages)*100) + '%';
                 }
-                setupFlip();
+                startFlipEngine();
                 renderIndex();
                 document.getElementById('loading-overlay').style.display = 'none';
             } catch (e) { console.error(e); }
         }
 
-        function setupFlip() {
+        function startFlipEngine() {
+            if (pageFlip) pageFlip.destroy();
+
+            // Logic: If isFullscreen is true, use Portrait (1 page) even on desktop
+            const usePortrait = isFullscreen || window.innerWidth < 1000;
+
             pageFlip = new St.PageFlip(document.getElementById('book-container'), {
-                width: 550, height: 800, size: "stretch", showCover: true, mobileScrollSupport: true, flippingTime: 1000
+                width: 550, height: 800, size: "stretch", showCover: true,
+                usePortrait: usePortrait,
+                flippingTime: 1000,
+                mobileScrollSupport: true
             });
+
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
             pageFlip.on('flip', (e) => {
                 document.getElementById('pageCurrent').innerText = e.data + 1;
@@ -284,19 +301,20 @@
             document.getElementById('book-container').style.visibility = 'visible';
         }
 
-        function toggleFullscreen() {
-            const el = document.getElementById('app-content');
-            if (!document.fullscreenElement) {
-                if (el.requestFullscreen) el.requestFullscreen();
-                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+        function handleCustomFullscreen() {
+            isFullscreen = !isFullscreen;
+            if (isFullscreen) {
+                document.body.classList.add('fullscreen-active');
             } else {
-                document.exitFullscreen();
+                document.body.classList.remove('fullscreen-active');
             }
+            // Re-init engine to apply One-Page layout
+            startFlipEngine();
         }
 
         function renderIndex() {
             const list = document.getElementById('fullIndexList');
-            caseData.forEach(item => {
+            indexData.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
@@ -310,7 +328,7 @@
             const res = document.getElementById('searchResults');
             res.innerHTML = '';
             if(q.length < 2) return;
-            caseData.filter(c => c.t.toLowerCase().includes(q)).forEach(item => {
+            indexData.filter(c => c.t.toLowerCase().includes(q)).forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
@@ -332,10 +350,10 @@
 
         document.getElementById('btnSound').onclick = function() {
             isSoundEnabled = !isSoundEnabled;
-            this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i>Audio' : '<i class="fas fa-volume-mute"></i>Mute';
+            this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i><span>Sound</span>' : '<i class="fas fa-volume-mute"></i><span>Mute</span>';
         };
 
-        window.onload = initFlipbook;
+        window.onload = initApp;
     </script>
 </body>
 </html>
