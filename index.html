@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>OPD Mastery | NEXTPULSE</title>
+    <title>OPD Mastery - NEXTPULSE</title>
     
     <!-- Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -12,142 +12,149 @@
 
     <style>
         :root {
-            --primary: #2c5282; /* Your Requested Blue */
+            --primary: #2c5282;
             --secondary: #ffffff;
             --bg-dark: #1a202c;
-            --glass: rgba(255, 255, 255, 0.1);
+            --header-height: 70px;
+            --footer-height: 60px;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            margin: 0;
             background: var(--bg-dark);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
+            width: 100vw;
             color: var(--secondary);
         }
 
-        /* --- Header --- */
-        .header {
+        /* --- NEXTPULSE Header (from Lecture Player) --- */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 0 2rem;
+            height: var(--header-height);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 25px;
-            background: var(--primary);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 100;
+            z-index: 1000;
         }
 
-        .title-group h1 { font-size: 1.2rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
-        .title-group p { font-size: 0.75rem; margin: 0; opacity: 0.9; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo h1 { font-size: 1.5rem; font-weight: 700; color: white; margin: 0; }
+        .logo i { font-size: 1.8rem; color: #4fd1c7; }
 
-        .controls { display: flex; gap: 8px; }
-        .btn {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 13px;
-            transition: 0.3s;
+            font-weight: 600;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 14px;
         }
-        .btn:hover { background: var(--secondary); color: var(--primary); }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
 
-        /* --- Flipbook Workspace --- */
+        /* --- Toolbar --- */
+        .toolbar {
+            background: #2d3748;
+            padding: 5px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tool-btn {
+            background: none;
+            border: none;
+            color: #a0aec0;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px;
+            transition: 0.2s;
+        }
+        .tool-btn:hover { color: white; }
+
+        /* --- Viewer Area (Always Full) --- */
         .viewer-area {
             flex: 1;
+            width: 100%;
+            height: calc(100vh - var(--header-height) - var(--footer-height));
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 40px;
-            perspective: 2000px;
+            background: #111; /* Darker contrast for the book */
+            position: relative;
         }
 
-        /* Prevent flashing: Container has fixed ratio */
         #book-container {
             visibility: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            /* Stabilization: fixed ratio */
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
         }
 
-        .page {
-            background-color: white;
-            overflow: hidden;
-        }
-
-        canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-            user-select: none;
-        }
+        .page { background-color: white; overflow: hidden; }
+        canvas { width: 100%; height: 100%; display: block; }
 
         /* --- Side Panels --- */
         .panel {
             position: fixed;
-            top: 0;
+            top: var(--header-height);
             left: -350px;
             width: 320px;
-            height: 100%;
+            height: calc(100% - var(--header-height));
             background: var(--secondary);
             color: #333;
             transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 200;
+            z-index: 2000;
             box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
         }
         .panel.active { left: 0; }
-        .panel-header {
-            background: var(--primary);
-            color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 0;
-        }
+        .panel-header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .panel-content { flex: 1; overflow-y: auto; padding: 10px 0; }
 
-        .search-box {
-            width: 90%;
-            margin: 15px auto;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #edf2f7;
-            display: block;
-        }
-
-        .list-item {
-            padding: 12px 20px;
-            border-bottom: 1px solid #edf2f7;
-            cursor: pointer;
-            font-size: 13px;
-            display: flex;
-            justify-content: space-between;
-            transition: 0.2s;
-        }
+        .search-box { width: 90%; margin: 15px auto; padding: 12px; border-radius: 8px; border: 2px solid #edf2f7; display: block; outline: none; }
+        .list-item { padding: 12px 20px; border-bottom: 1px solid #edf2f7; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
         .list-item:hover { background: #f7fafc; color: var(--primary); font-weight: bold; }
         .list-item span { color: #a0aec0; font-size: 11px; }
 
-        /* --- UI Components --- */
-        .footer {
-            background: #2d3748;
-            padding: 15px;
+        /* --- Footer --- */
+        footer {
+            background: var(--primary);
+            height: var(--footer-height);
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 30px;
+            gap: 40px;
+            z-index: 1000;
         }
 
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .nav-btn:hover { background: white; color: var(--primary); }
+
+        /* --- Loading Overlay --- */
         #loading-overlay {
             position: fixed;
             inset: 0;
@@ -156,23 +163,16 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 9999;
         }
-
-        .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid rgba(255,255,255,0.1);
-            border-top: 5px solid var(--secondary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1); border-top: 5px solid #4fd1c7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        @media (max-width: 768px) {
-            .viewer-area { padding: 10px; }
-            .header { padding: 10px; }
-            .btn span { display: none; }
+        @media (max-width: 600px) {
+            header { padding: 0 1rem; }
+            .logo h1 { font-size: 1.1rem; }
+            .back-btn { padding: 0.5rem; }
+            .back-btn span { display: none; }
         }
     </style>
 </head>
@@ -180,19 +180,22 @@
 
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <p>Loading OPD Mastery Database...</p>
-        <small id="load-progress">Preparing pages: 0%</small>
+        <p>Opening OPD Clinical Notebook...</p>
+        <small id="load-progress" style="margin-top:10px; opacity:0.6;">Rendering: 0%</small>
     </div>
 
-    <header class="header">
-        <div class="title-group">
-            <h1>OPD Mastery</h1>
-            <p>Edition 2026 • Clinical Reference</p>
+    <header>
+        <div class="logo">
+            <i class="fas fa-heartbeat"></i>
+            <h1>NEXTPULSE</h1>
         </div>
-        <div class="controls">
-            <button class="btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> <span>Index</span></button>
-            <button class="btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> <span>Search</span></button>
-            <button class="btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="tool-btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> Index</button>
+            <button class="tool-btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> Search</button>
+            <a href="javascript:history.back()" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back</span>
+            </a>
         </div>
     </header>
 
@@ -200,34 +203,30 @@
         <div id="book-container"></div>
     </div>
 
-    <!-- Index Panel -->
     <div id="indexPanel" class="panel">
         <div class="panel-header">
-            <h3>Quick Index</h3>
+            <h3>Full Index</h3>
             <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
         </div>
-        <div class="panel-content" id="fullIndexList">
-            <!-- Full Index injected by JS -->
-        </div>
+        <div class="panel-content" id="fullIndexList"></div>
     </div>
 
-    <!-- Search Panel -->
     <div id="searchPanel" class="panel">
         <div class="panel-header">
-            <h3>Search Case</h3>
+            <h3>Search Library</h3>
             <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
         </div>
-        <input type="text" class="search-box" id="searchInput" placeholder="Search symptoms, cases...">
+        <input type="text" class="search-box" id="searchInput" placeholder="Search conditions or meds...">
         <div class="panel-content" id="searchResults"></div>
     </div>
 
-    <footer class="footer">
-        <button class="btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
-        <div style="font-weight: bold; width: 120px; text-align: center;">
-            <span id="pageCurrent">1</span> / <span id="pageTotal">52</span>
+    <footer>
+        <button class="nav-btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
+        <div style="font-weight: 600; width: 100px; text-align: center;">
+            <span id="pageCurrent">1</span> / 52
         </div>
-        <button class="btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
-        <button class="btn" id="btnSound" style="margin-left: 20px;"><i class="fas fa-volume-up"></i></button>
+        <button class="nav-btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
+        <button class="nav-btn" id="btnSound" style="margin-left: 20px;"><i class="fas fa-volume-up"></i></button>
     </footer>
 
     <script>
@@ -238,61 +237,60 @@
         let pageFlip = null;
         let isSoundEnabled = true;
 
-        const caseData = [
-            { id: 1, t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 },
-            { id: 2, t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
-            { id: 3, t: "COUGH (PRODUCTIVE)", p: 5 },
-            { id: 4, t: "HEADACHE (RECURRENT)", p: 6 },
-            { id: 5, t: "NEUROPATHIC PAIN", p: 7 },
-            { id: 6, t: "BLOATING / GAS / FULLNESS", p: 8 },
-            { id: 7, t: "HIGH BLOOD PRESSURE", p: 9 },
-            { id: 8, t: "BED WETTING IN TEENS", p: 10 },
-            { id: 9, t: "HAIR FALL (Diffuse / Gradual)", p: 11 },
-            { id: 10, t: "ERECTILE DYSFUNCTION", p: 12 },
-            { id: 11, t: "LOW SPERM COUNT", p: 13 },
-            { id: 12, t: "PREMATURE EJACULATION", p: 14 },
-            { id: 13, t: "URINARY TRACT INFECTION", p: 15 },
-            { id: 14, t: "FILARIASIS (Acute Attack)", p: 16 },
-            { id: 15, t: "DENGUE FEVER", p: 17 },
-            { id: 16, t: "TYPHOID FEVER", p: 18 },
-            { id: 17, t: "MALARIA", p: 19 },
-            { id: 18, t: "DIABETES MELLITUS (Type 2)", p: 20 },
-            { id: 19, t: "ACUTE SINUSITIS", p: 21 },
-            { id: 20, t: "COPD (Chronic Obstructive)", p: 22 },
-            { id: 21, t: "DYSPEPSIA", p: 23 },
-            { id: 22, t: "BELL'S PALSY", p: 24 },
-            { id: 23, t: "ARTHRITIS", p: 25 },
-            { id: 24, t: "SCIATICA PAIN", p: 26 },
-            { id: 25, t: "BODY ACHE (MYALGIA)", p: 27 },
-            { id: 26, t: "OBESITY", p: 28 },
-            { id: 27, t: "IRRITABLE BOWEL SYNDROME", p: 29 },
-            { id: 28, t: "CONSTIPATION", p: 30 },
-            { id: 29, t: "ACUTE DIARRHOEA", p: 31 },
-            { id: 30, t: "DYSLIPIDEMIA", p: 32 },
-            { id: 31, t: "KNEE PAIN", p: 33 },
-            { id: 32, t: "WORM INFESTATION", p: 34 },
-            { id: 33, t: "VERTIGO", p: 35 },
-            { id: 34, t: "NUMBNESS IN ARMS & LEGS", p: 36 },
-            { id: 35, t: "WHITE DISCHARGE (Vaginal)", p: 37 },
-            { id: 36, t: "PCOD — OBS & GYNAE", p: 38 },
-            { id: 37, t: "IRREGULAR MENSTRUAL CYCLE", p: 39 },
-            { id: 38, t: "PAINFUL PERIODS", p: 40 },
-            { id: 39, t: "FIRST TRIMESTER PREGNANCY", p: 41 },
-            { id: 40, t: "SECOND TRIMESTER PREGNANCY", p: 42 },
-            { id: 41, t: "THIRD TRIMESTER PREGNANCY", p: 43 },
-            { id: 42, t: "INFERTILITY", p: 44 },
-            { id: 43, t: "MASTALGIA (Breast Pain)", p: 45 },
-            { id: 44, t: "FIBROID UTERUS", p: 46 },
-            { id: 45, t: "ANAEMIA IN PREGNANCY", p: 47 },
-            { id: 46, t: "GESTATIONAL HYPERTENSION", p: 48 },
-            { id: 47, t: "GESTATIONAL DIABETES", p: 49 },
-            { id: 48, t: "MINOR AILMENTS PREGNANCY", p: 50 },
-            { id: 49, t: "ORAL CONTRACEPTIVE PILLS", p: 51 },
-            { id: 50, t: "EMERGENCY CONTRACEPTION", p: 52 }
+        const indexData = [
+            { t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 },
+            { t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
+            { t: "COUGH (PRODUCTIVE)", p: 5 },
+            { t: "HEADACHE (RECURRENT)", p: 6 },
+            { t: "NEUROPATHIC PAIN", p: 7 },
+            { t: "BLOATING / GAS / FULLNESS", p: 8 },
+            { t: "HIGH BLOOD PRESSURE", p: 9 },
+            { t: "BED WETTING IN TEENS", p: 10 },
+            { t: "HAIR FALL (Diffuse / Gradual)", p: 11 },
+            { t: "ERECTILE DYSFUNCTION", p: 12 },
+            { t: "LOW SPERM COUNT", p: 13 },
+            { t: "PREMATURE EJACULATION", p: 14 },
+            { t: "URINARY TRACT INFECTION", p: 15 },
+            { t: "FILARIASIS (Acute Attack)", p: 16 },
+            { t: "DENGUE FEVER", p: 17 },
+            { t: "TYPHOID FEVER", p: 18 },
+            { t: "MALARIA", p: 19 },
+            { t: "DIABETES MELLITUS (Type 2)", p: 20 },
+            { t: "ACUTE SINUSITIS", p: 21 },
+            { t: "COPD (Chronic Obstructive)", p: 22 },
+            { t: "DYSPEPSIA", p: 23 },
+            { t: "BELL'S PALSY", p: 24 },
+            { t: "ARTHRITIS", p: 25 },
+            { t: "SCIATICA PAIN", p: 26 },
+            { t: "BODY ACHE (MYALGIA)", p: 27 },
+            { t: "OBESITY", p: 28 },
+            { t: "IRRITABLE BOWEL SYNDROME", p: 29 },
+            { t: "CONSTIPATION", p: 30 },
+            { t: "ACUTE DIARRHOEA", p: 31 },
+            { t: "DYSLIPIDEMIA", p: 32 },
+            { t: "KNEE PAIN", p: 33 },
+            { t: "WORM INFESTATION", p: 34 },
+            { t: "VERTIGO", p: 35 },
+            { t: "NUMBNESS IN ARMS & LEGS", p: 36 },
+            { t: "WHITE DISCHARGE (Vaginal)", p: 37 },
+            { t: "PCOD — OBS & GYNAE", p: 38 },
+            { t: "IRREGULAR MENSTRUAL CYCLE", p: 39 },
+            { t: "PAINFUL PERIODS", p: 40 },
+            { t: "FIRST TRIMESTER PREGNANCY", p: 41 },
+            { t: "SECOND TRIMESTER PREGNANCY", p: 42 },
+            { t: "THIRD TRIMESTER PREGNANCY", p: 43 },
+            { t: "INFERTILITY", p: 44 },
+            { t: "MASTALGIA (Breast Pain)", p: 45 },
+            { t: "FIBROID UTERUS", p: 46 },
+            { t: "ANAEMIA IN PREGNANCY", p: 47 },
+            { t: "GESTATIONAL HYPERTENSION", p: 48 },
+            { t: "GESTATIONAL DIABETES", p: 49 },
+            { t: "MINOR AILMENTS PREGNANCY", p: 50 },
+            { t: "ORAL CONTRACEPTIVE PILLS", p: 51 },
+            { t: "EMERGENCY CONTRACEPTION", p: 52 }
         ];
 
-        // Initialize PDF Rendering
-        async function initFlipbook() {
+        async function initApp() {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
             
             try {
@@ -303,7 +301,7 @@
 
                 for (let i = 1; i <= totalPages; i++) {
                     const page = await pdfDoc.getPage(i);
-                    const viewport = page.getViewport({ scale: 2 }); // High res for stability
+                    const viewport = page.getViewport({ scale: 1.8 }); // Higher scale for stability/clarity
                     
                     const pageDiv = document.createElement('div');
                     pageDiv.className = 'page';
@@ -314,27 +312,28 @@
                     canvas.width = viewport.width;
 
                     await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    
                     pageDiv.appendChild(canvas);
                     container.appendChild(pageDiv);
 
-                    // Update loader
-                    document.getElementById('load-progress').innerText = `Preparing pages: ${Math.round((i/totalPages)*100)}%`;
+                    document.getElementById('load-progress').innerText = `Rendering: ${Math.round((i/totalPages)*100)}%`;
                 }
 
                 startFlipEngine();
-                renderIndex();
+                buildIndex();
                 document.getElementById('loading-overlay').style.display = 'none';
 
             } catch (e) {
-                alert("Error loading PDF. Please ensure you are running this on a server or use a local PDF file.");
                 console.error(e);
+                alert("Failed to load PDF. Check CORS or use a local file.");
             }
         }
 
         function startFlipEngine() {
+            const vWidth = window.innerWidth > 1000 ? 550 : window.innerWidth * 0.45;
+            const vHeight = window.innerHeight * 0.75;
+
             pageFlip = new St.PageFlip(document.getElementById('book-container'), {
-                width: 550,
+                width: 550, 
                 height: 800,
                 size: "stretch",
                 minWidth: 315,
@@ -350,20 +349,22 @@
 
             pageFlip.on('flip', (e) => {
                 document.getElementById('pageCurrent').innerText = e.data + 1;
-                if (isSoundEnabled) flipSound.play();
+                if (isSoundEnabled) {
+                    flipSound.currentTime = 0;
+                    flipSound.play();
+                }
             });
 
             document.getElementById('book-container').style.visibility = 'visible';
         }
 
-        // Index and Search Logic
-        function renderIndex() {
+        function buildIndex() {
             const list = document.getElementById('fullIndexList');
-            caseData.forEach(item => {
+            indexData.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
-                div.onclick = () => jumpTo(item.p);
+                div.onclick = () => { pageFlip.turnToPage(item.p - 1); closePanels(); };
                 list.appendChild(div);
             });
         }
@@ -374,20 +375,14 @@
             results.innerHTML = '';
             if(query.length < 2) return;
 
-            caseData.filter(c => c.t.toLowerCase().includes(query)).forEach(item => {
+            indexData.filter(c => c.t.toLowerCase().includes(query)).forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
-                div.onclick = () => jumpTo(item.p);
+                div.onclick = () => { pageFlip.turnToPage(item.p - 1); closePanels(); };
                 results.appendChild(div);
             });
         };
-
-        // UI Helpers
-        function jumpTo(p) {
-            pageFlip.turnToPage(p - 1);
-            closePanels();
-        }
 
         function togglePanel(id) {
             const panel = document.getElementById(id);
@@ -400,17 +395,12 @@
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         }
 
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-            else document.exitFullscreen();
-        }
-
         document.getElementById('btnSound').onclick = function() {
             isSoundEnabled = !isSoundEnabled;
             this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
         };
 
-        window.onload = initFlipbook;
+        window.onload = initApp;
     </script>
 </body>
 </html>
