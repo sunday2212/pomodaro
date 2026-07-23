@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>OPD Mastery Flipbook | NEXTPULSE</title>
+    <title>OPD Mastery | NEXTPULSE</title>
     
     <!-- Dependencies -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -12,113 +12,140 @@
 
     <style>
         :root {
-            --primary: #7a8aff;
-            --bg-dark: #16161f;
-            --glass: rgba(255, 255, 255, 0.08);
+            --primary: #2c5282; /* Your Requested Blue */
+            --secondary: #ffffff;
+            --bg-dark: #1a202c;
+            --glass: rgba(255, 255, 255, 0.1);
         }
 
         body {
             margin: 0;
-            background: #1e1e2f;
-            font-family: system-ui, sans-serif;
+            background: var(--bg-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            color: white;
+            color: var(--secondary);
         }
 
-        /* --- Header Controls --- */
+        /* --- Header --- */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            background: var(--bg-dark);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 12px 25px;
+            background: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 100;
         }
 
-        .title-group h1 { font-size: 18px; margin: 0; color: #f0f0ff; }
-        .title-group p { font-size: 12px; margin: 0; color: #8888bb; }
+        .title-group h1 { font-size: 1.2rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .title-group p { font-size: 0.75rem; margin: 0; opacity: 0.9; }
 
-        .controls { display: flex; gap: 10px; }
+        .controls { display: flex; gap: 8px; }
         .btn {
-            background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #d0d0ee;
-            padding: 8px 12px;
-            border-radius: 8px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: 0.2s;
+            font-size: 13px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
-        .btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+        .btn:hover { background: var(--secondary); color: var(--primary); }
 
-        /* --- Flipbook Container --- */
+        /* --- Flipbook Workspace --- */
         .viewer-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            position: relative;
-            padding: 20px;
+            padding: 40px;
+            perspective: 2000px;
         }
 
+        /* Prevent flashing: Container has fixed ratio */
         #book-container {
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            visibility: hidden; /* Hidden until loaded */
+            visibility: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
         }
 
         .page {
             background-color: white;
             overflow: hidden;
-            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1);
         }
 
-        canvas { width: 100%; height: 100%; display: block; }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            user-select: none;
+        }
 
-        /* --- Side Panels (Search & Index) --- */
+        /* --- Side Panels --- */
         .panel {
             position: fixed;
-            top: 60px;
-            left: -320px;
-            width: 300px;
-            bottom: 0;
-            background: rgba(20, 20, 32, 0.95);
-            backdrop-filter: blur(10px);
-            transition: 0.3s;
+            top: 0;
+            left: -350px;
+            width: 320px;
+            height: 100%;
+            background: var(--secondary);
+            color: #333;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 200;
-            border-right: 1px solid rgba(255,255,255,0.1);
-            padding: 20px;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
         }
         .panel.active { left: 0; }
+        .panel-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
 
         .search-box {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            background: var(--glass);
-            color: white;
-            margin-bottom: 15px;
+            width: 90%;
+            margin: 15px auto;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #edf2f7;
+            display: block;
         }
 
-        .result-item, .index-item {
-            padding: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+        .list-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid #edf2f7;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            transition: 0.2s;
         }
-        .result-item:hover, .index-item:hover { background: var(--glass); }
+        .list-item:hover { background: #f7fafc; color: var(--primary); font-weight: bold; }
+        .list-item span { color: #a0aec0; font-size: 11px; }
 
-        /* --- Footer --- */
+        /* --- UI Components --- */
         .footer {
-            background: var(--bg-dark);
-            padding: 10px;
+            background: #2d3748;
+            padding: 15px;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 20px;
+            gap: 30px;
         }
 
         #loading-overlay {
@@ -133,16 +160,19 @@
         }
 
         .spinner {
-            width: 40px; height: 40px;
-            border: 4px solid var(--glass);
-            border-top: 4px solid var(--primary);
+            width: 50px; height: 50px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top: 5px solid var(--secondary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin-bottom: 15px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 768px) {
-            #book-container { width: 100% !important; height: auto !important; }
+            .viewer-area { padding: 10px; }
+            .header { padding: 10px; }
+            .btn span { display: none; }
         }
     </style>
 </head>
@@ -150,18 +180,18 @@
 
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <p>Rendering Notebook...</p>
+        <p>Loading OPD Mastery Database...</p>
+        <small id="load-progress">Preparing pages: 0%</small>
     </div>
 
     <header class="header">
         <div class="title-group">
             <h1>OPD Mastery</h1>
-            <p>Edition-2026 Clinical Reference</p>
+            <p>Edition 2026 • Clinical Reference</p>
         </div>
         <div class="controls">
-            <button class="btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> Index</button>
-            <button class="btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> Search</button>
-            <button class="btn" id="btnSound"><i class="fas fa-volume-up"></i></button>
+            <button class="btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> <span>Index</span></button>
+            <button class="btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> <span>Search</span></button>
             <button class="btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
         </div>
     </header>
@@ -172,29 +202,32 @@
 
     <!-- Index Panel -->
     <div id="indexPanel" class="panel">
-        <h3>Table of Contents</h3>
-        <div id="indexList">
-            <div class="index-item" onclick="jumpTo(3)">1. Dry Cough (Page 3)</div>
-            <div class="index-item" onclick="jumpTo(4)">2. Acidity / GERD (Page 4)</div>
-            <div class="index-item" onclick="jumpTo(9)">3. Hypertension (Page 9)</div>
-            <div class="index-item" onclick="jumpTo(17)">4. Dengue Fever (Page 17)</div>
-            <div class="index-item" onclick="jumpTo(20)">5. Diabetes Type 2 (Page 20)</div>
-            <div class="index-item" onclick="jumpTo(37)">6. Gynaecology (Page 37)</div>
-            <div class="index-item" onclick="jumpTo(47)">7. Anaemia in Pregnancy (Page 47)</div>
+        <div class="panel-header">
+            <h3>Quick Index</h3>
+            <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
+        </div>
+        <div class="panel-content" id="fullIndexList">
+            <!-- Full Index injected by JS -->
         </div>
     </div>
 
     <!-- Search Panel -->
     <div id="searchPanel" class="panel">
-        <h3>Search Document</h3>
-        <input type="text" class="search-box" id="searchInput" placeholder="Type symptoms or medicine...">
-        <div id="searchResults"></div>
+        <div class="panel-header">
+            <h3>Search Case</h3>
+            <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
+        </div>
+        <input type="text" class="search-box" id="searchInput" placeholder="Search symptoms, cases...">
+        <div class="panel-content" id="searchResults"></div>
     </div>
 
     <footer class="footer">
-        <button class="btn" id="prevBtn"><i class="fas fa-arrow-left"></i></button>
-        <span id="pageInfo">Page 1 / --</span>
-        <button class="btn" id="nextBtn"><i class="fas fa-arrow-right"></i></button>
+        <button class="btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
+        <div style="font-weight: bold; width: 120px; text-align: center;">
+            <span id="pageCurrent">1</span> / <span id="pageTotal">52</span>
+        </div>
+        <button class="btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
+        <button class="btn" id="btnSound" style="margin-left: 20px;"><i class="fas fa-volume-up"></i></button>
     </footer>
 
     <script>
@@ -204,47 +237,105 @@
         let pdfDoc = null;
         let pageFlip = null;
         let isSoundEnabled = true;
-        let fullTextContent = [];
 
-        // 1. Load and Render PDF
+        const caseData = [
+            { id: 1, t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 },
+            { id: 2, t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
+            { id: 3, t: "COUGH (PRODUCTIVE)", p: 5 },
+            { id: 4, t: "HEADACHE (RECURRENT)", p: 6 },
+            { id: 5, t: "NEUROPATHIC PAIN", p: 7 },
+            { id: 6, t: "BLOATING / GAS / FULLNESS", p: 8 },
+            { id: 7, t: "HIGH BLOOD PRESSURE", p: 9 },
+            { id: 8, t: "BED WETTING IN TEENS", p: 10 },
+            { id: 9, t: "HAIR FALL (Diffuse / Gradual)", p: 11 },
+            { id: 10, t: "ERECTILE DYSFUNCTION", p: 12 },
+            { id: 11, t: "LOW SPERM COUNT", p: 13 },
+            { id: 12, t: "PREMATURE EJACULATION", p: 14 },
+            { id: 13, t: "URINARY TRACT INFECTION", p: 15 },
+            { id: 14, t: "FILARIASIS (Acute Attack)", p: 16 },
+            { id: 15, t: "DENGUE FEVER", p: 17 },
+            { id: 16, t: "TYPHOID FEVER", p: 18 },
+            { id: 17, t: "MALARIA", p: 19 },
+            { id: 18, t: "DIABETES MELLITUS (Type 2)", p: 20 },
+            { id: 19, t: "ACUTE SINUSITIS", p: 21 },
+            { id: 20, t: "COPD (Chronic Obstructive)", p: 22 },
+            { id: 21, t: "DYSPEPSIA", p: 23 },
+            { id: 22, t: "BELL'S PALSY", p: 24 },
+            { id: 23, t: "ARTHRITIS", p: 25 },
+            { id: 24, t: "SCIATICA PAIN", p: 26 },
+            { id: 25, t: "BODY ACHE (MYALGIA)", p: 27 },
+            { id: 26, t: "OBESITY", p: 28 },
+            { id: 27, t: "IRRITABLE BOWEL SYNDROME", p: 29 },
+            { id: 28, t: "CONSTIPATION", p: 30 },
+            { id: 29, t: "ACUTE DIARRHOEA", p: 31 },
+            { id: 30, t: "DYSLIPIDEMIA", p: 32 },
+            { id: 31, t: "KNEE PAIN", p: 33 },
+            { id: 32, t: "WORM INFESTATION", p: 34 },
+            { id: 33, t: "VERTIGO", p: 35 },
+            { id: 34, t: "NUMBNESS IN ARMS & LEGS", p: 36 },
+            { id: 35, t: "WHITE DISCHARGE (Vaginal)", p: 37 },
+            { id: 36, t: "PCOD — OBS & GYNAE", p: 38 },
+            { id: 37, t: "IRREGULAR MENSTRUAL CYCLE", p: 39 },
+            { id: 38, t: "PAINFUL PERIODS", p: 40 },
+            { id: 39, t: "FIRST TRIMESTER PREGNANCY", p: 41 },
+            { id: 40, t: "SECOND TRIMESTER PREGNANCY", p: 42 },
+            { id: 41, t: "THIRD TRIMESTER PREGNANCY", p: 43 },
+            { id: 42, t: "INFERTILITY", p: 44 },
+            { id: 43, t: "MASTALGIA (Breast Pain)", p: 45 },
+            { id: 44, t: "FIBROID UTERUS", p: 46 },
+            { id: 45, t: "ANAEMIA IN PREGNANCY", p: 47 },
+            { id: 46, t: "GESTATIONAL HYPERTENSION", p: 48 },
+            { id: 47, t: "GESTATIONAL DIABETES", p: 49 },
+            { id: 48, t: "MINOR AILMENTS PREGNANCY", p: 50 },
+            { id: 49, t: "ORAL CONTRACEPTIVE PILLS", p: 51 },
+            { id: 50, t: "EMERGENCY CONTRACEPTION", p: 52 }
+        ];
+
+        // Initialize PDF Rendering
         async function initFlipbook() {
-            const loadingTask = pdfjsLib.getDocument(PDF_URL);
-            pdfDoc = await loadingTask.promise;
-            const container = document.getElementById('book-container');
-            const totalPages = pdfDoc.numPages;
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            
+            try {
+                const loadingTask = pdfjsLib.getDocument(PDF_URL);
+                pdfDoc = await loadingTask.promise;
+                const totalPages = pdfDoc.numPages;
+                const container = document.getElementById('book-container');
 
-            for (let i = 1; i <= totalPages; i++) {
-                const pageDiv = document.createElement('div');
-                pageDiv.className = 'page';
-                const canvas = document.createElement('canvas');
-                pageDiv.appendChild(canvas);
-                container.appendChild(pageDiv);
+                for (let i = 1; i <= totalPages; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: 2 }); // High res for stability
+                    
+                    const pageDiv = document.createElement('div');
+                    pageDiv.className = 'page';
+                    
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
 
-                const page = await pdfDoc.getPage(i);
-                const viewport = page.getViewport({ scale: 1.5 });
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    
+                    pageDiv.appendChild(canvas);
+                    container.appendChild(pageDiv);
 
-                await page.render({ canvasContext: context, viewport: viewport }).promise;
-                
-                // Store text for search
-                const text = await page.getTextContent();
-                fullTextContent.push({
-                    page: i,
-                    text: text.items.map(s => s.str).join(' ').toLowerCase()
-                });
+                    // Update loader
+                    document.getElementById('load-progress').innerText = `Preparing pages: ${Math.round((i/totalPages)*100)}%`;
+                }
+
+                startFlipEngine();
+                renderIndex();
+                document.getElementById('loading-overlay').style.display = 'none';
+
+            } catch (e) {
+                alert("Error loading PDF. Please ensure you are running this on a server or use a local PDF file.");
+                console.error(e);
             }
-
-            setupFlipEffect();
-            document.getElementById('loading-overlay').style.display = 'none';
         }
 
-        // 2. Setup Flip Effect (Notebook Style)
-        function setupFlipEffect() {
+        function startFlipEngine() {
             pageFlip = new St.PageFlip(document.getElementById('book-container'), {
-                width: 550, // base page width
-                height: 800, // base page height
+                width: 550,
+                height: 800,
                 size: "stretch",
                 minWidth: 315,
                 maxWidth: 1000,
@@ -252,67 +343,66 @@
                 maxHeight: 1350,
                 maxShadowOpacity: 0.5,
                 showCover: true,
-                mobileScrollSupport: false
+                mobileScrollSupport: true
             });
 
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
 
-            // Page Turn Event
             pageFlip.on('flip', (e) => {
-                document.getElementById('pageInfo').innerText = `Page ${e.data + 1} / ${pdfDoc.numPages}`;
+                document.getElementById('pageCurrent').innerText = e.data + 1;
                 if (isSoundEnabled) flipSound.play();
             });
 
             document.getElementById('book-container').style.visibility = 'visible';
         }
 
-        // Navigation
-        document.getElementById('nextBtn').onclick = () => pageFlip.flipNext();
-        document.getElementById('prevBtn').onclick = () => pageFlip.flipPrev();
+        // Index and Search Logic
+        function renderIndex() {
+            const list = document.getElementById('fullIndexList');
+            caseData.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
+                div.onclick = () => jumpTo(item.p);
+                list.appendChild(div);
+            });
+        }
 
+        document.getElementById('searchInput').oninput = (e) => {
+            const query = e.target.value.toLowerCase();
+            const results = document.getElementById('searchResults');
+            results.innerHTML = '';
+            if(query.length < 2) return;
+
+            caseData.filter(c => c.t.toLowerCase().includes(query)).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
+                div.onclick = () => jumpTo(item.p);
+                results.appendChild(div);
+            });
+        };
+
+        // UI Helpers
         function jumpTo(p) {
             pageFlip.turnToPage(p - 1);
             closePanels();
         }
 
-        // Panels Logic
         function togglePanel(id) {
             const panel = document.getElementById(id);
-            const isActive = panel.classList.contains('active');
+            const isAct = panel.classList.contains('active');
             closePanels();
-            if (!isActive) panel.classList.add('active');
+            if(!isAct) panel.classList.add('active');
         }
 
         function closePanels() {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         }
 
-        // Search Engine Logic
-        document.getElementById('searchInput').oninput = (e) => {
-            const query = e.target.value.toLowerCase();
-            const resultsBox = document.getElementById('searchResults');
-            resultsBox.innerHTML = '';
-
-            if (query.length < 3) return;
-
-            fullTextContent.forEach(item => {
-                if (item.text.includes(query)) {
-                    const div = document.createElement('div');
-                    div.className = 'result-item';
-                    div.innerHTML = `<strong>Page ${item.page}:</strong> Found "${query}"...`;
-                    div.onclick = () => jumpTo(item.page);
-                    resultsBox.appendChild(div);
-                }
-            });
-        };
-
-        // UI Helpers
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
         }
 
         document.getElementById('btnSound').onclick = function() {
@@ -320,7 +410,6 @@
             this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
         };
 
-        // Start
         window.onload = initFlipbook;
     </script>
 </body>
