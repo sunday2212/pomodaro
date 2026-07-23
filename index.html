@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>OPD Mastery - NEXTPULSE</title>
-    
+
     <!-- Dependencies -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js">
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
@@ -19,7 +21,11 @@
             --footer-height: 60px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background: var(--bg-dark);
@@ -45,11 +51,28 @@
             z-index: 1000;
         }
 
-        .logo { display: flex; align-items: center; gap: 12px; }
-        .logo h1 { font-size: 1.4rem; font-weight: 700; color: white; margin: 0; letter-spacing: 1px; }
-        .logo i { font-size: 1.8rem; color: #4fd1c7; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+            letter-spacing: 1px;
+        }
+        .logo i {
+            font-size: 1.8rem;
+            color: #4fd1c7;
+        }
 
-        .header-right { display: flex; gap: 10px; align-items: center; }
+        .header-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
         .back-btn {
             background: rgba(255, 255, 255, 0.15);
@@ -66,19 +89,33 @@
             text-decoration: none;
             font-size: 14px;
         }
-        .back-btn:hover { background: var(--secondary); color: var(--primary); }
+        .back-btn:hover {
+            background: var(--secondary);
+            color: var(--primary);
+        }
 
         .tool-btn {
             background: none;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             cursor: pointer;
             font-size: 14px;
             padding: 8px 12px;
             border-radius: 6px;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .tool-btn:hover { background: rgba(255,255,255,0.1); }
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .tool-btn.active-toggle {
+            background: #4fd1c7;
+            color: #0f172a;
+            border-color: #4fd1c7;
+            font-weight: 600;
+        }
 
         /* --- Viewer Area --- */
         .viewer-area {
@@ -101,6 +138,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: background 0.4s ease;
+        }
+
+        /* Single-page notebook mode styling */
+        #book-wrapper.single-page-mode {
+            background: #1a1a2e;
+            border-radius: 12px;
+            box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.5);
         }
 
         #book-container {
@@ -108,8 +153,15 @@
             box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.7);
         }
 
-        .page { background-color: white; overflow: hidden; }
-        canvas { width: 100%; height: 100%; display: block; }
+        .page {
+            background-color: white;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
 
         /* --- Side Panels --- */
         .panel {
@@ -122,18 +174,56 @@
             color: #333;
             transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 2000;
-            box-shadow: 15px 0 50px rgba(0,0,0,0.6);
+            box-shadow: 15px 0 50px rgba(0, 0, 0, 0.6);
             display: flex;
             flex-direction: column;
         }
-        .panel.active { left: 0; }
-        .panel-header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .panel-content { flex: 1; overflow-y: auto; }
+        .panel.active {
+            left: 0;
+        }
+        .panel-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+        }
 
-        .search-box { width: 90%; margin: 15px auto; padding: 12px; border-radius: 8px; border: 2px solid #edf2f7; display: block; outline: none; }
-        .list-item { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-        .list-item:hover { background: #f8fafc; color: var(--primary); font-weight: 600; }
-        .list-item span { background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 10px; color: #64748b; }
+        .search-box {
+            width: 90%;
+            margin: 15px auto;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #edf2f7;
+            display: block;
+            outline: none;
+        }
+        .list-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item:hover {
+            background: #f8fafc;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .list-item span {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #64748b;
+        }
 
         /* --- Footer --- */
         footer {
@@ -144,20 +234,27 @@
             align-items: center;
             gap: 40px;
             z-index: 1000;
-            border-top: 1px solid rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .nav-btn {
             background: var(--primary);
             border: none;
             color: white;
-            width: 45px; height: 45px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .nav-btn:hover { transform: scale(1.1); background: #3182ce; }
+        .nav-btn:hover {
+            transform: scale(1.1);
+            background: #3182ce;
+        }
 
         /* --- Loading --- */
         #loading-overlay {
@@ -170,20 +267,30 @@
             align-items: center;
             z-index: 9999;
         }
-        .spinner { width: 50px; height: 50px; border: 4px solid rgba(79, 209, 199, 0.1); border-top: 4px solid #4fd1c7; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Fullscreen Mode - Single Page Look */
-        #book-wrapper.fullscreen-mode {
-            background: #000;
-            position: fixed;
-            inset: 0;
-            z-index: 3000;
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(79, 209, 199, 0.1);
+            border-top: 4px solid #4fd1c7;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @media (max-width: 600px) {
-            .logo h1 { display: none; }
-            .back-btn span { display: none; }
+            .logo h1 {
+                display: none;
+            }
+            .back-btn span {
+                display: none;
+            }
+            .tool-btn span {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -201,202 +308,240 @@
             <h1>NEXTPULSE</h1>
         </div>
         <div class="header-right">
-            <button class="tool-btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> Index</button>
-            <button class="tool-btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> Search</button>
-            <button class="tool-btn" onclick="toggleFullscreen()" title="Full Screen Single Page"><i class="fas fa-expand-arrows-alt"></i></button>
-            <a href="javascript:history.back()" class="back-btn">
-                <i class="fas fa-arrow-left"></i>
-                <span>Back</span>
-            </a>
-        </div>
-    </header>
-
-    <div class="viewer-area">
-        <div id="book-wrapper">
-            <div id="book-container"></div>
-        </div>
+            <button class="tool-btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> <span>Index</span></button>
+            <button class="tool-btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> <span>Search</span></button>
+            <!-- ✅ FIXED: View mode toggle button (single-page ↔ two-page, no browser fullscreen) -->
+            <button class="tool-btn" id="btnViewMode" onclick="toggleViewMode()"
+            title="Toggle between single-page notebook and two-page book view">
+            <i class="fas fa-book-open"></i> <span>Two-Page</span>
+        </button>
+        <a href="javascript:history.back()" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back</span>
+        </a>
     </div>
+</header>
 
-    <div id="indexPanel" class="panel">
-        <div class="panel-header">
-            <h3>Notebook Index</h3>
-            <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
-        </div>
-        <div class="panel-content" id="fullIndexList"></div>
+<div class="viewer-area">
+    <div id="book-wrapper">
+        <div id="book-container"></div>
     </div>
+</div>
 
-    <div id="searchPanel" class="panel">
-        <div class="panel-header">
-            <h3>Search Database</h3>
-            <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
-        </div>
-        <input type="text" class="search-box" id="searchInput" placeholder="Search conditions...">
-        <div class="panel-content" id="searchResults"></div>
+<div id="indexPanel" class="panel">
+    <div class="panel-header">
+        <h3>Notebook Index</h3>
+        <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
     </div>
+    <div class="panel-content" id="fullIndexList"></div>
+</div>
 
-    <footer id="mainFooter">
-        <button class="nav-btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
-        <div style="font-weight: 600; width: 120px; text-align: center; font-size: 1.1rem;">
-            <span id="pageCurrent" style="color: #4fd1c7;">1</span> / 52
-        </div>
-        <button class="nav-btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
-        <button class="nav-btn" id="btnSound" style="margin-left: 20px; background: #4a5568;"><i class="fas fa-volume-up"></i></button>
-    </footer>
+<div id="searchPanel" class="panel">
+    <div class="panel-header">
+        <h3>Search Database</h3>
+        <i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i>
+    </div>
+    <input type="text" class="search-box" id="searchInput" placeholder="Search conditions...">
+    <div class="panel-content" id="searchResults"></div>
+</div>
 
-    <script>
-        const PDF_URL = 'https://cdnc.heyzine.com/files/uploaded/2f525ee1fda444bde96c5ba29e86b8d86fe889a9.pdf';
-        const flipSound = new Audio('https://www.soundjay.com/print/sounds/page-flip-01a.mp3');
-        
-        let pdfDoc = null;
-        let pageFlip = null;
-        let isSoundEnabled = true;
+<footer id="mainFooter">
+    <button class="nav-btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
+    <div style="font-weight: 600; width: 120px; text-align: center; font-size: 1.1rem;">
+        <span id="pageCurrent" style="color: #4fd1c7;">1</span> / 52
+    </div>
+    <button class="nav-btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
+    <button class="nav-btn" id="btnSound" style="margin-left: 20px; background: #4a5568;"><i class="fas fa-volume-up"></i></button>
+</footer>
 
-        const indexData = [
-            { t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 }, { t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
-            { t: "COUGH (PRODUCTIVE)", p: 5 }, { t: "HEADACHE (RECURRENT)", p: 6 },
-            { t: "NEUROPATHIC PAIN", p: 7 }, { t: "BLOATING / GAS / FULLNESS", p: 8 },
-            { t: "HIGH BLOOD PRESSURE", p: 9 }, { t: "BED WETTING IN TEENS", p: 10 },
-            { t: "HAIR FALL (Diffuse / Gradual)", p: 11 }, { t: "ERECTILE DYSFUNCTION", p: 12 },
-            { t: "LOW SPERM COUNT", p: 13 }, { t: "PREMATURE EJACULATION", p: 14 },
-            { t: "URINARY TRACT INFECTION", p: 15 }, { t: "FILARIASIS (Acute Attack)", p: 16 },
-            { t: "DENGUE FEVER", p: 17 }, { t: "TYPHOID FEVER", p: 18 },
-            { t: "MALARIA", p: 19 }, { t: "DIABETES MELLITUS (Type 2)", p: 20 },
-            { t: "ACUTE SINUSITIS", p: 21 }, { t: "COPD (Chronic Obstructive)", p: 22 },
-            { t: "DYSPEPSIA", p: 23 }, { t: "BELL'S PALSY", p: 24 },
-            { t: "ARTHRITIS", p: 25 }, { t: "SCIATICA PAIN", p: 26 },
-            { t: "BODY ACHE (MYALGIA)", p: 27 }, { t: "OBESITY", p: 28 },
-            { t: "IRRITABLE BOWEL SYNDROME", p: 29 }, { t: "CONSTIPATION", p: 30 },
-            { t: "ACUTE DIARRHOEA", p: 31 }, { t: "DYSLIPIDEMIA", p: 32 },
-            { t: "KNEE PAIN", p: 33 }, { t: "WORM INFESTATION", p: 34 },
-            { t: "VERTIGO", p: 35 }, { t: "NUMBNESS IN ARMS & LEGS", p: 36 },
-            { t: "WHITE DISCHARGE (Vaginal)", p: 37 }, { t: "PCOD — OBS & GYNAE", p: 38 },
-            { t: "IRREGULAR MENSTRUAL CYCLE", p: 39 }, { t: "PAINFUL PERIODS", p: 40 },
-            { t: "FIRST TRIMESTER PREGNANCY", p: 41 }, { t: "SECOND TRIMESTER PREGNANCY", p: 42 },
-            { t: "THIRD TRIMESTER PREGNANCY", p: 43 }, { t: "INFERTILITY", p: 44 },
-            { t: "MASTALGIA (Breast Pain)", p: 45 }, { t: "FIBROID UTERUS", p: 46 },
-            { t: "ANAEMIA IN PREGNANCY", p: 47 }, { t: "GESTATIONAL HYPERTENSION", p: 48 },
-            { t: "GESTATIONAL DIABETES", p: 49 }, { t: "MINOR AILMENTS PREGNANCY", p: 50 },
-            { t: "ORAL CONTRACEPTIVE PILLS", p: 51 }, { t: "EMERGENCY CONTRACEPTION", p: 52 }
-        ];
+<script>
+    const PDF_URL =
+        'https://cdnc.heyzine.com/files/uploaded/2f525ee1fda444bde96c5ba29e86b8d86fe889a9.pdf';
+    const flipSound = new Audio('https://www.soundjay.com/print/sounds/page-flip-01a.mp3');
 
-        async function initApp() {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            try {
-                const loadingTask = pdfjsLib.getDocument(PDF_URL);
-                pdfDoc = await loadingTask.promise;
-                const totalPages = pdfDoc.numPages;
-                const container = document.getElementById('book-container');
+    let pdfDoc = null;
+    let pageFlip = null;
+    let isSoundEnabled = true;
+    // ✅ Track current view mode: false = two-page (landscape), true = single-page (portrait/notebook)
+    let isSinglePageMode = false;
 
-                for (let i = 1; i <= totalPages; i++) {
-                    const page = await pdfDoc.getPage(i);
-                    const viewport = page.getViewport({ scale: 2 }); 
-                    const pageDiv = document.createElement('div');
-                    pageDiv.className = 'page';
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    pageDiv.appendChild(canvas);
-                    container.appendChild(pageDiv);
-                    document.getElementById('load-progress').innerText = `Rendering: ${Math.round((i/totalPages)*100)}%`;
-                }
+    const indexData = [
+        { t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 }, { t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
+        { t: "COUGH (PRODUCTIVE)", p: 5 }, { t: "HEADACHE (RECURRENT)", p: 6 },
+        { t: "NEUROPATHIC PAIN", p: 7 }, { t: "BLOATING / GAS / FULLNESS", p: 8 },
+        { t: "HIGH BLOOD PRESSURE", p: 9 }, { t: "BED WETTING IN TEENS", p: 10 },
+        { t: "HAIR FALL (Diffuse / Gradual)", p: 11 }, { t: "ERECTILE DYSFUNCTION", p: 12 },
+        { t: "LOW SPERM COUNT", p: 13 }, { t: "PREMATURE EJACULATION", p: 14 },
+        { t: "URINARY TRACT INFECTION", p: 15 }, { t: "FILARIASIS (Acute Attack)", p: 16 },
+        { t: "DENGUE FEVER", p: 17 }, { t: "TYPHOID FEVER", p: 18 },
+        { t: "MALARIA", p: 19 }, { t: "DIABETES MELLITUS (Type 2)", p: 20 },
+        { t: "ACUTE SINUSITIS", p: 21 }, { t: "COPD (Chronic Obstructive)", p: 22 },
+        { t: "DYSPEPSIA", p: 23 }, { t: "BELL'S PALSY", p: 24 },
+        { t: "ARTHRITIS", p: 25 }, { t: "SCIATICA PAIN", p: 26 },
+        { t: "BODY ACHE (MYALGIA)", p: 27 }, { t: "OBESITY", p: 28 },
+        { t: "IRRITABLE BOWEL SYNDROME", p: 29 }, { t: "CONSTIPATION", p: 30 },
+        { t: "ACUTE DIARRHOEA", p: 31 }, { t: "DYSLIPIDEMIA", p: 32 },
+        { t: "KNEE PAIN", p: 33 }, { t: "WORM INFESTATION", p: 34 },
+        { t: "VERTIGO", p: 35 }, { t: "NUMBNESS IN ARMS & LEGS", p: 36 },
+        { t: "WHITE DISCHARGE (Vaginal)", p: 37 }, { t: "PCOD — OBS & GYNAE", p: 38 },
+        { t: "IRREGULAR MENSTRUAL CYCLE", p: 39 }, { t: "PAINFUL PERIODS", p: 40 },
+        { t: "FIRST TRIMESTER PREGNANCY", p: 41 }, { t: "SECOND TRIMESTER PREGNANCY", p: 42 },
+        { t: "THIRD TRIMESTER PREGNANCY", p: 43 }, { t: "INFERTILITY", p: 44 },
+        { t: "MASTALGIA (Breast Pain)", p: 45 }, { t: "FIBROID UTERUS", p: 46 },
+        { t: "ANAEMIA IN PREGNANCY", p: 47 }, { t: "GESTATIONAL HYPERTENSION", p: 48 },
+        { t: "GESTATIONAL DIABETES", p: 49 }, { t: "MINOR AILMENTS PREGNANCY", p: 50 },
+        { t: "ORAL CONTRACEPTIVE PILLS", p: 51 }, { t: "EMERGENCY CONTRACEPTION", p: 52 }
+    ];
 
-                startFlipEngine("landscape");
-                buildIndex();
-                document.getElementById('loading-overlay').style.display = 'none';
-            } catch (e) { console.error(e); }
-        }
+    async function initApp() {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        try {
+            const loadingTask = pdfjsLib.getDocument(PDF_URL);
+            pdfDoc = await loadingTask.promise;
+            const totalPages = pdfDoc.numPages;
+            const container = document.getElementById('book-container');
 
-        function startFlipEngine(mode) {
-            if (pageFlip) pageFlip.destroy();
-
-            const isPortrait = (mode === "portrait" || window.innerWidth < 900);
-
-            pageFlip = new St.PageFlip(document.getElementById('book-container'), {
-                width: 550, height: 800,
-                size: "stretch",
-                minWidth: 315, maxWidth: 1000,
-                minHeight: 420, maxHeight: 1350,
-                maxShadowOpacity: 0.5,
-                showCover: true,
-                mobileScrollSupport: true,
-                usePortrait: isPortrait,
-                flippingTime: 800 // Stable flip speed
-            });
-
-            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
-            pageFlip.on('flip', (e) => {
-                document.getElementById('pageCurrent').innerText = e.data + 1;
-                if (isSoundEnabled) { flipSound.currentTime = 0; flipSound.play(); }
-            });
-            document.getElementById('book-container').style.visibility = 'visible';
-        }
-
-        function toggleFullscreen() {
-            const wrapper = document.getElementById('book-wrapper');
-            const isFull = document.fullscreenElement;
-
-            if (!isFull) {
-                document.documentElement.requestFullscreen();
-                wrapper.classList.add('fullscreen-mode');
-                // Switch to Single Page Portrait for best readability
-                setTimeout(() => startFlipEngine("portrait"), 300);
-            } else {
-                document.exitFullscreen();
+            for (let i = 1; i <= totalPages; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 2 });
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                pageDiv.appendChild(canvas);
+                container.appendChild(pageDiv);
+                document.getElementById('load-progress').innerText =
+                    `Rendering: ${Math.round((i / totalPages) * 100)}%`;
             }
-        }
 
-        // Listen for exit fullscreen to revert to 2-page view
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement) {
-                document.getElementById('book-wrapper').classList.remove('fullscreen-mode');
-                startFlipEngine("landscape");
-            }
+            // Start in two-page landscape mode (default)
+            startFlipEngine("landscape");
+            updateViewModeButton();
+            buildIndex();
+            document.getElementById('loading-overlay').style.display = 'none';
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function startFlipEngine(mode) {
+        if (pageFlip) pageFlip.destroy();
+
+        const isPortrait = (mode === "portrait" || window.innerWidth < 900);
+
+        pageFlip = new St.PageFlip(document.getElementById('book-container'), {
+            width: 550,
+            height: 800,
+            size: "stretch",
+            minWidth: 315,
+            maxWidth: 1000,
+            minHeight: 420,
+            maxHeight: 1350,
+            maxShadowOpacity: 0.5,
+            showCover: true,
+            mobileScrollSupport: true,
+            usePortrait: isPortrait,
+            flippingTime: 800 // Stable flip speed
         });
 
-        function buildIndex() {
-            const list = document.getElementById('fullIndexList');
-            indexData.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
-                div.onclick = () => { pageFlip.turnToPage(item.p - 1); closePanels(); };
-                list.appendChild(div);
-            });
+        pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+        pageFlip.on('flip', (e) => {
+            document.getElementById('pageCurrent').innerText = e.data + 1;
+            if (isSoundEnabled) {
+                flipSound.currentTime = 0;
+                flipSound.play();
+            }
+        });
+        document.getElementById('book-container').style.visibility = 'visible';
+    }
+
+    // ✅ FIXED: Toggle between single-page notebook view and two-page book view
+    // No browser fullscreen API involved — just switches the page-flip engine mode
+    function toggleViewMode() {
+        isSinglePageMode = !isSinglePageMode;
+        const wrapper = document.getElementById('book-wrapper');
+
+        if (isSinglePageMode) {
+            // Switch to single-page portrait (notebook style)
+            wrapper.classList.add('single-page-mode');
+            startFlipEngine("portrait");
+        } else {
+            // Switch back to two-page landscape (book style)
+            wrapper.classList.remove('single-page-mode');
+            startFlipEngine("landscape");
         }
 
-        document.getElementById('searchInput').oninput = (e) => {
-            const query = e.target.value.toLowerCase();
-            const results = document.getElementById('searchResults');
-            results.innerHTML = '';
-            if(query.length < 2) return;
-            indexData.filter(c => c.t.toLowerCase().includes(query)).forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
-                div.onclick = () => { pageFlip.turnToPage(item.p - 1); closePanels(); };
-                results.appendChild(div);
-            });
-        };
+        updateViewModeButton();
+    }
 
-        function togglePanel(id) {
-            const panel = document.getElementById(id);
-            const isAct = panel.classList.contains('active');
-            closePanels();
-            if(!isAct) panel.classList.add('active');
+    // ✅ Update the toggle button icon and text to reflect current mode
+    function updateViewModeButton() {
+        const btn = document.getElementById('btnViewMode');
+        if (isSinglePageMode) {
+            btn.innerHTML = '<i class="fas fa-book"></i> <span>One-Page</span>';
+            btn.classList.add('active-toggle');
+            btn.title = 'Switch to two-page book view';
+        } else {
+            btn.innerHTML = '<i class="fas fa-book-open"></i> <span>Two-Page</span>';
+            btn.classList.remove('active-toggle');
+            btn.title = 'Switch to single-page notebook view';
         }
+    }
 
-        function closePanels() {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        }
+    function buildIndex() {
+        const list = document.getElementById('fullIndexList');
+        indexData.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
+            div.onclick = () => {
+                pageFlip.turnToPage(item.p - 1);
+                closePanels();
+            };
+            list.appendChild(div);
+        });
+    }
 
-        document.getElementById('btnSound').onclick = function() {
-            isSoundEnabled = !isSoundEnabled;
-            this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
-        };
+    document.getElementById('searchInput').oninput = (e) => {
+        const query = e.target.value.toLowerCase();
+        const results = document.getElementById('searchResults');
+        results.innerHTML = '';
+        if (query.length < 2) return;
+        indexData.filter(c => c.t.toLowerCase().includes(query)).forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
+            div.onclick = () => {
+                pageFlip.turnToPage(item.p - 1);
+                closePanels();
+            };
+            results.appendChild(div);
+        });
+    };
 
-        window.onload = initApp;
-    </script>
+    function togglePanel(id) {
+        const panel = document.getElementById(id);
+        const isAct = panel.classList.contains('active');
+        closePanels();
+        if (!isAct) panel.classList.add('active');
+    }
+
+    function closePanels() {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    }
+
+    document.getElementById('btnSound').onclick = function() {
+        isSoundEnabled = !isSoundEnabled;
+        this.innerHTML = isSoundEnabled ?
+            '<i class="fas fa-volume-up"></i>' :
+            '<i class="fas fa-volume-mute"></i>';
+    };
+
+    window.onload = initApp;
+</script>
 </body>
 </html>
