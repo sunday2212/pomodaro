@@ -3,106 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>OPD Mastery - Clinical Reference</title>
+    <title>OPD Mastery Flipbook | NEXTPULSE</title>
     
-    <!-- PWA Primary Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-    <!-- DFlip Style Sheet (Hosted CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/dflip@1.0.10/css/dflip.min.css" rel="stylesheet" type="text/css">
-    <link href="https://cdn.jsdelivr.net/npm/dflip@1.0.10/css/themify-icons.min.css" rel="stylesheet" type="text/css">
+    <!-- Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
-        body, html {
+        :root {
+            --primary: #7a8aff;
+            --bg-dark: #16161f;
+            --glass: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
             margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
+            background: #1e1e2f;
+            font-family: system-ui, sans-serif;
             overflow: hidden;
-            background-color: #1a1a1a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        /* Full Screen Loading Container */
-        #flipbook-container {
-            height: 100vh;
-            width: 100vw;
-        }
-
-        /* Custom Header for NEXTPULSE App Branding */
-        .app-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
             display: flex;
-            align-items: center;
-            padding-left: 20px;
-            z-index: 9999;
-            border-bottom: 1px solid #333;
+            flex-direction: column;
+            height: 100vh;
+            color: white;
         }
 
-        /* Responsive Fixes for Mobile */
-        @media (max-width: 600px) {
-            .app-header h1 { font-size: 16px; }
-            .df-ui-controls { bottom: 10px !important; }
+        /* --- Header Controls --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--bg-dark);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            z-index: 100;
+        }
+
+        .title-group h1 { font-size: 18px; margin: 0; color: #f0f0ff; }
+        .title-group p { font-size: 12px; margin: 0; color: #8888bb; }
+
+        .controls { display: flex; gap: 10px; }
+        .btn {
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #d0d0ee;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        /* --- Flipbook Container --- */
+        .viewer-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        #book-container {
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            visibility: hidden; /* Hidden until loaded */
+        }
+
+        .page {
+            background-color: white;
+            overflow: hidden;
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.1);
+        }
+
+        canvas { width: 100%; height: 100%; display: block; }
+
+        /* --- Side Panels (Search & Index) --- */
+        .panel {
+            position: fixed;
+            top: 60px;
+            left: -320px;
+            width: 300px;
+            bottom: 0;
+            background: rgba(20, 20, 32, 0.95);
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+            z-index: 200;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+        }
+        .panel.active { left: 0; }
+
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background: var(--glass);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .result-item, .index-item {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .result-item:hover, .index-item:hover { background: var(--glass); }
+
+        /* --- Footer --- */
+        .footer {
+            background: var(--bg-dark);
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid var(--glass);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            #book-container { width: 100% !important; height: auto !important; }
         }
     </style>
 </head>
 <body>
 
-    <div class="app-header">
-        <h1>NEXTPULSE | OPD Mastery Book</h1>
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>Rendering Notebook...</p>
     </div>
 
-    <!-- The Flipbook Container -->
-    <div id="flipbook-container"></div>
+    <header class="header">
+        <div class="title-group">
+            <h1>OPD Mastery</h1>
+            <p>Edition-2026 Clinical Reference</p>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i> Index</button>
+            <button class="btn" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i> Search</button>
+            <button class="btn" id="btnSound"><i class="fas fa-volume-up"></i></button>
+            <button class="btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
+        </div>
+    </header>
 
-    <!-- jQuery (Required for the flip engine) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <!-- DFlip Plugin JS -->
-    <script src="https://cdn.jsdelivr.net/npm/dflip@1.0.10/js/dflip.min.js"></script>
+    <div class="viewer-area">
+        <div id="book-container"></div>
+    </div>
+
+    <!-- Index Panel -->
+    <div id="indexPanel" class="panel">
+        <h3>Table of Contents</h3>
+        <div id="indexList">
+            <div class="index-item" onclick="jumpTo(3)">1. Dry Cough (Page 3)</div>
+            <div class="index-item" onclick="jumpTo(4)">2. Acidity / GERD (Page 4)</div>
+            <div class="index-item" onclick="jumpTo(9)">3. Hypertension (Page 9)</div>
+            <div class="index-item" onclick="jumpTo(17)">4. Dengue Fever (Page 17)</div>
+            <div class="index-item" onclick="jumpTo(20)">5. Diabetes Type 2 (Page 20)</div>
+            <div class="index-item" onclick="jumpTo(37)">6. Gynaecology (Page 37)</div>
+            <div class="index-item" onclick="jumpTo(47)">7. Anaemia in Pregnancy (Page 47)</div>
+        </div>
+    </div>
+
+    <!-- Search Panel -->
+    <div id="searchPanel" class="panel">
+        <h3>Search Document</h3>
+        <input type="text" class="search-box" id="searchInput" placeholder="Type symptoms or medicine...">
+        <div id="searchResults"></div>
+    </div>
+
+    <footer class="footer">
+        <button class="btn" id="prevBtn"><i class="fas fa-arrow-left"></i></button>
+        <span id="pageInfo">Page 1 / --</span>
+        <button class="btn" id="nextBtn"><i class="fas fa-arrow-right"></i></button>
+    </footer>
 
     <script>
-        jQuery(document).ready(function () {
-            // PDF URL from your source
-            var pdfUrl = "https://cdnc.heyzine.com/files/uploaded/2f525ee1fda444bde96c5ba29e86b8d86fe889a9.pdf";
-            
-            var options = {
-                // Book Settings
-                height: window.innerHeight,
-                duration: 800,           // Flip speed
-                direction: DFLIP.DIRECTION.LTR,
-                
-                // Features
-                autoEnableOutline: true,  // Shows Index/Table of Contents
-                autoEnableThumbnail: true,
-                enableSearch: true,       // Search functionality
-                enableSound: true,        // Realistic Page Turn Sound
-                
-                // UI Customization
-                moreControls: "download,print,play,search,fullScreen",
-                allControls: "altPrev,pageNumber,altNext,outline,thumbnail,zoomIn,zoomOut,fullScreen,share,search,more,download",
-                
-                // 3D Realistic Settings
-                webgl: true,              // Hardware acceleration for real folding look
-                scrollWheel: true,
-                paddingTop: 50,           // Space for our header
-            };
+        const PDF_URL = 'https://cdnc.heyzine.com/files/uploaded/2f525ee1fda444bde96c5ba29e86b8d86fe889a9.pdf';
+        const flipSound = new Audio('https://www.soundjay.com/print/sounds/page-flip-01a.mp3');
+        
+        let pdfDoc = null;
+        let pageFlip = null;
+        let isSoundEnabled = true;
+        let fullTextContent = [];
 
-            // Initialize Flipbook
-            var flipBook = $("#flipbook-container").flipBook(pdfUrl, options);
-        });
+        // 1. Load and Render PDF
+        async function initFlipbook() {
+            const loadingTask = pdfjsLib.getDocument(PDF_URL);
+            pdfDoc = await loadingTask.promise;
+            const container = document.getElementById('book-container');
+            const totalPages = pdfDoc.numPages;
 
-        // Ensure responsive resizing
-        window.onresize = function() {
-            location.reload(); 
+            for (let i = 1; i <= totalPages; i++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                const canvas = document.createElement('canvas');
+                pageDiv.appendChild(canvas);
+                container.appendChild(pageDiv);
+
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 1.5 });
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                
+                // Store text for search
+                const text = await page.getTextContent();
+                fullTextContent.push({
+                    page: i,
+                    text: text.items.map(s => s.str).join(' ').toLowerCase()
+                });
+            }
+
+            setupFlipEffect();
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        // 2. Setup Flip Effect (Notebook Style)
+        function setupFlipEffect() {
+            pageFlip = new St.PageFlip(document.getElementById('book-container'), {
+                width: 550, // base page width
+                height: 800, // base page height
+                size: "stretch",
+                minWidth: 315,
+                maxWidth: 1000,
+                minHeight: 420,
+                maxHeight: 1350,
+                maxShadowOpacity: 0.5,
+                showCover: true,
+                mobileScrollSupport: false
+            });
+
+            pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+
+            // Page Turn Event
+            pageFlip.on('flip', (e) => {
+                document.getElementById('pageInfo').innerText = `Page ${e.data + 1} / ${pdfDoc.numPages}`;
+                if (isSoundEnabled) flipSound.play();
+            });
+
+            document.getElementById('book-container').style.visibility = 'visible';
+        }
+
+        // Navigation
+        document.getElementById('nextBtn').onclick = () => pageFlip.flipNext();
+        document.getElementById('prevBtn').onclick = () => pageFlip.flipPrev();
+
+        function jumpTo(p) {
+            pageFlip.turnToPage(p - 1);
+            closePanels();
+        }
+
+        // Panels Logic
+        function togglePanel(id) {
+            const panel = document.getElementById(id);
+            const isActive = panel.classList.contains('active');
+            closePanels();
+            if (!isActive) panel.classList.add('active');
+        }
+
+        function closePanels() {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        }
+
+        // Search Engine Logic
+        document.getElementById('searchInput').oninput = (e) => {
+            const query = e.target.value.toLowerCase();
+            const resultsBox = document.getElementById('searchResults');
+            resultsBox.innerHTML = '';
+
+            if (query.length < 3) return;
+
+            fullTextContent.forEach(item => {
+                if (item.text.includes(query)) {
+                    const div = document.createElement('div');
+                    div.className = 'result-item';
+                    div.innerHTML = `<strong>Page ${item.page}:</strong> Found "${query}"...`;
+                    div.onclick = () => jumpTo(item.page);
+                    resultsBox.appendChild(div);
+                }
+            });
         };
+
+        // UI Helpers
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.getElementById('btnSound').onclick = function() {
+            isSoundEnabled = !isSoundEnabled;
+            this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
+        };
+
+        // Start
+        window.onload = initFlipbook;
     </script>
 </body>
 </html>
