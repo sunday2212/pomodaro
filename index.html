@@ -12,214 +12,215 @@
 
     <style>
         :root {
-            --primary: #2c5282; 
+            --primary: #2c5282; /* Deep Blue */
+            --primary-light: #3182ce;
             --secondary: #ffffff;
-            --bg-dark: #1a202c;
-            --accent: #4fd1c7;
-            --header-h: 65px;
-            --toolbar-h: 50px;
+            --bg-body: #f0f4f8;
+            --dark-gray: #2d3748;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: var(--bg-dark);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            overflow: hidden;
+            background-color: var(--bg-body);
+            color: var(--dark-gray);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            color: var(--secondary);
+            overflow: hidden;
         }
 
-        /* --- NEXTPULSE Header (Row 1) --- */
-        .brand-header {
+        /* --- NEXTPULSE HEADER (Integrated) --- */
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
-            background: var(--primary);
-            height: var(--header-h);
-            z-index: 1001;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        .logo-area { display: flex; align-items: center; gap: 10px; }
-        .logo-area i { font-size: 1.8rem; color: var(--accent); }
-        .logo-area h1 { font-size: 1.3rem; font-weight: 800; color: white; letter-spacing: 1px; }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo h1 { font-size: 1.4rem; font-weight: 700; color: white; margin: 0; }
+        .logo i { font-size: 1.6rem; color: #4fd1c7; }
 
         .back-btn {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 7px 14px;
+            padding: 0.5rem 1rem;
             border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* --- Toolbar (Row 2) --- */
-        .nav-toolbar {
-            background: #2d3748;
-            height: var(--toolbar-h);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            z-index: 1000;
-        }
-
-        .tool-link {
-            color: #cbd5e0;
             cursor: pointer;
-            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 5px 10px;
-            transition: 0.2s;
-            border-radius: 5px;
+            gap: 8px;
+            text-decoration: none;
+            font-size: 14px;
         }
-        .tool-link:hover { color: white; background: rgba(255,255,255,0.05); }
+        .back-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
 
-        /* --- Viewer Workspace --- */
-        #viewer-workspace {
+        /* --- Main Viewer Workspace --- */
+        .viewer-area {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
             position: relative;
-            background: radial-gradient(circle, #2d3748 0%, #1a202c 100%);
-            transition: all 0.3s ease;
+            background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Container Stability Fix */
+        .book-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 1000px; /* Desktop width for 2 pages */
+            height: 75vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #book-container {
             visibility: hidden;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+            background: transparent;
         }
 
-        /* Fullscreen "One Page" View Logic */
-        body.fullscreen-active #viewer-workspace {
-            position: fixed;
-            top: var(--header-h); /* Keep Header constant */
-            left: 0;
-            width: 100vw;
-            height: calc(100vh - var(--header-h));
-            z-index: 2000;
-            background: #000;
-            padding: 5px;
+        .page {
+            background-color: white;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
         }
 
-        .page { background-color: white; overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
 
-        /* --- Panels --- */
-        .panel {
-            position: fixed;
-            top: 0; left: -350px;
-            width: 320px; height: 100%;
-            background: var(--secondary); color: #333;
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 3000;
-            box-shadow: 15px 0 50px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column;
-        }
-        .panel.active { left: 0; }
-        .panel-header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .panel-content { flex: 1; overflow-y: auto; }
-
-        .search-box { width: 90%; margin: 15px auto; padding: 12px; border-radius: 8px; border: 2px solid #edf2f7; display: block; }
-        .list-item { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; font-size: 13px; display: flex; justify-content: space-between; }
-        .list-item:hover { background: #f8fafc; color: var(--primary); font-weight: 600; }
-        .list-item span { color: #a0aec0; font-size: 10px; }
-
-        /* --- Footer --- */
-        footer {
-            background: #1e293b;
-            padding: 10px;
+        /* --- Controls Bar --- */
+        .bottom-nav {
+            background: var(--primary);
+            padding: 12px;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 30px;
-            z-index: 1000;
+            gap: 20px;
+            color: white;
+            z-index: 100;
         }
 
-        .nav-btn {
-            background: var(--primary); border: none; color: white;
-            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+        .btn-icon {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        .btn-icon:hover { background: white; color: var(--primary); }
 
+        /* --- Side Panels --- */
+        .panel {
+            position: fixed;
+            top: 0;
+            left: -350px;
+            width: 320px;
+            height: 100%;
+            background: white;
+            z-index: 2000;
+            box-shadow: 10px 0 40px rgba(0,0,0,0.3);
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+        .panel.active { left: 0; }
+        .panel-header { background: var(--primary); color: white; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .panel-content { flex: 1; overflow-y: auto; padding: 10px 0; }
+
+        .list-item { padding: 12px 20px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
+        .list-item:hover { background: #f7fafc; color: var(--primary); font-weight: bold; }
+        .list-item span { color: #cbd5e0; }
+
+        .search-input { width: 90%; margin: 15px auto; padding: 10px; border: 1px solid #ddd; border-radius: 6px; display: block; }
+
+        /* --- Loading Overlay --- */
         #loading-overlay {
-            position: fixed; inset: 0; background: #0f172a;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000;
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
         }
-        .spinner { width: 45px; height: 45px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @media (max-width: 600px) {
-            .logo-area h1 { font-size: 1.1rem; }
-            .tool-link span { display: none; }
-            .tool-link i { font-size: 18px; }
-            #viewer-workspace { padding: 5px; }
-        }
     </style>
 </head>
 <body>
 
     <div id="loading-overlay">
-        <div class="spinner"></div>
-        <p style="margin-top:15px; font-weight:600;">Opening Notebook...</p>
-        <small id="load-progress" style="color: var(--accent);">0%</small>
+        <div class="loader"></div>
+        <p style="color:var(--primary); font-weight: 600;">Building Your Clinical Notebook...</p>
+        <small id="load-status">0%</small>
     </div>
 
-    <!-- Row 1: Brand -->
-    <header class="brand-header">
-        <div class="logo-area">
+    <!-- NEXTPULSE HEADER -->
+    <header>
+        <div class="logo">
             <i class="fas fa-heartbeat"></i>
             <h1>NEXTPULSE</h1>
         </div>
         <a href="javascript:history.back()" class="back-btn">
-            <i class="fas fa-arrow-left"></i> <span>Back</span>
+            <i class="fas fa-arrow-left"></i>
+            Back
         </a>
     </header>
 
-    <!-- Row 2: Controls -->
-    <nav class="nav-toolbar">
-        <div class="tool-link" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i><span>Index</span></div>
-        <div class="tool-link" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i><span>Search</span></div>
-        <div class="tool-link" onclick="handleCustomFullscreen()"><i class="fas fa-expand-arrows-alt"></i><span>Full Screen</span></div>
-        <div class="tool-link" id="btnSound"><i class="fas fa-volume-up"></i><span>Sound</span></div>
-    </nav>
-
-    <!-- Content -->
-    <div id="viewer-workspace">
-        <div id="book-container"></div>
-    </div>
-
+    <!-- Side Panels -->
     <div id="indexPanel" class="panel">
         <div class="panel-header"><h3>Full Index</h3><i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i></div>
-        <div class="panel-content" id="fullIndexList"></div>
+        <div class="panel-content" id="indexList"></div>
     </div>
 
     <div id="searchPanel" class="panel">
-        <div class="panel-header"><h3>Search Condition</h3><i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i></div>
-        <input type="text" class="search-box" id="searchInput" placeholder="Type here...">
+        <div class="panel-header"><h3>Search Case</h3><i class="fas fa-times" onclick="closePanels()" style="cursor:pointer"></i></div>
+        <input type="text" class="search-input" id="searchInput" placeholder="Type symptom (e.g. Cough)...">
         <div class="panel-content" id="searchResults"></div>
     </div>
 
-    <footer>
-        <button class="nav-btn" onclick="pageFlip.flipPrev()"><i class="fas fa-chevron-left"></i></button>
-        <div style="font-weight: 600; width: 100px; text-align: center;">
-            <span id="pageCurrent" style="color: var(--accent);">1</span> / 52
+    <div class="viewer-area">
+        <!-- Stability Wrapper -->
+        <div class="book-wrapper">
+            <div id="book-container"></div>
         </div>
-        <button class="nav-btn" onclick="pageFlip.flipNext()"><i class="fas fa-chevron-right"></i></button>
-    </footer>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="btn-icon" onclick="togglePanel('indexPanel')"><i class="fas fa-list"></i></button>
+        <button class="btn-icon" onclick="togglePanel('searchPanel')"><i class="fas fa-search"></i></button>
+        
+        <div style="display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.2); padding: 5px 20px; border-radius: 30px;">
+            <i class="fas fa-chevron-left" style="cursor:pointer" onclick="pageFlip.flipPrev()"></i>
+            <span id="pageDisplay" style="min-width: 60px; text-align: center;">1 / 52</span>
+            <i class="fas fa-chevron-right" style="cursor:pointer" onclick="pageFlip.flipNext()"></i>
+        </div>
+
+        <button class="btn-icon" id="soundToggle"><i class="fas fa-volume-up"></i></button>
+        <button class="btn-icon" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></button>
+    </div>
 
     <script>
         const PDF_URL = 'https://cdnc.heyzine.com/files/uploaded/2f525ee1fda444bde96c5ba29e86b8d86fe889a9.pdf';
@@ -227,8 +228,7 @@
         
         let pdfDoc = null;
         let pageFlip = null;
-        let isSoundEnabled = true;
-        let isFullscreen = false;
+        let soundEnabled = true;
 
         const indexData = [
             { t: "NON-PRODUCTIVE (DRY) COUGH", p: 3 }, { t: "ACIDITY / EPIGASTRIC PAIN", p: 4 },
@@ -237,18 +237,18 @@
             { t: "HIGH BLOOD PRESSURE", p: 9 }, { t: "BED WETTING IN TEENS", p: 10 },
             { t: "HAIR FALL (Diffuse / Gradual)", p: 11 }, { t: "ERECTILE DYSFUNCTION", p: 12 },
             { t: "LOW SPERM COUNT", p: 13 }, { t: "PREMATURE EJACULATION", p: 14 },
-            { t: "URINARY TRACT INFECTION", p: 15 }, { t: "FILARIASIS (Acute Attack)", p: 16 },
+            { t: "URINARY TRACT INFECTION", p: 15 }, { t: "FILARIASIS (Acute)", p: 16 },
             { t: "DENGUE FEVER", p: 17 }, { t: "TYPHOID FEVER", p: 18 },
             { t: "MALARIA", p: 19 }, { t: "DIABETES MELLITUS (Type 2)", p: 20 },
-            { t: "ACUTE SINUSITIS", p: 21 }, { t: "COPD (Chronic Obstructive)", p: 22 },
+            { t: "ACUTE SINUSITIS", p: 21 }, { t: "COPD", p: 22 },
             { t: "DYSPEPSIA", p: 23 }, { t: "BELL'S PALSY", p: 24 },
             { t: "ARTHRITIS", p: 25 }, { t: "SCIATICA PAIN", p: 26 },
             { t: "BODY ACHE (MYALGIA)", p: 27 }, { t: "OBESITY", p: 28 },
             { t: "IRRITABLE BOWEL SYNDROME", p: 29 }, { t: "CONSTIPATION", p: 30 },
             { t: "ACUTE DIARRHOEA", p: 31 }, { t: "DYSLIPIDEMIA", p: 32 },
-            { t: "KNEE PAIN", p: 33 }, { t: "WORM INFESTATION", p: 34 },
+            { t: "KNEE PAIN (Osteoarthritis)", p: 33 }, { t: "WORM INFESTATION", p: 34 },
             { t: "VERTIGO", p: 35 }, { t: "NUMBNESS IN ARMS & LEGS", p: 36 },
-            { t: "WHITE DISCHARGE (Vaginal)", p: 37 }, { t: "PCOD — OBS & GYNAE", p: 38 },
+            { t: "WHITE DISCHARGE (Vaginal)", p: 37 }, { t: "PCOD", p: 38 },
             { t: "IRREGULAR MENSTRUAL CYCLE", p: 39 }, { t: "PAINFUL PERIODS", p: 40 },
             { t: "FIRST TRIMESTER PREGNANCY", p: 41 }, { t: "SECOND TRIMESTER PREGNANCY", p: 42 },
             { t: "THIRD TRIMESTER PREGNANCY", p: 43 }, { t: "INFERTILITY", p: 44 },
@@ -258,62 +258,66 @@
             { t: "ORAL CONTRACEPTIVE PILLS", p: 51 }, { t: "EMERGENCY CONTRACEPTION", p: 52 }
         ];
 
-        async function initApp() {
+        async function init() {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            try {
-                pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
-                const container = document.getElementById('book-container');
-                for (let i = 1; i <= pdfDoc.numPages; i++) {
-                    const page = await pdfDoc.getPage(i);
-                    const viewport = page.getViewport({ scale: 2 });
-                    const canvas = document.createElement('canvas');
-                    canvas.height = viewport.height; canvas.width = viewport.width;
-                    await page.render({ canvasContext: canvas.getContext('2d'), viewport: viewport }).promise;
-                    const div = document.createElement('div');
-                    div.className = 'page'; div.appendChild(canvas);
-                    container.appendChild(div);
-                    document.getElementById('load-progress').innerText = Math.round((i/pdfDoc.numPages)*100) + '%';
-                }
-                startFlipEngine();
-                renderIndex();
-                document.getElementById('loading-overlay').style.display = 'none';
-            } catch (e) { console.error(e); }
+            
+            pdfDoc = await pdfjsLib.getDocument(PDF_URL).promise;
+            const total = pdfDoc.numPages;
+            const container = document.getElementById('book-container');
+
+            for (let i = 1; i <= total; i++) {
+                const page = await pdfDoc.getPage(i);
+                const viewport = page.getViewport({ scale: 2 });
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'page';
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                pageDiv.appendChild(canvas);
+                container.appendChild(pageDiv);
+                document.getElementById('load-status').innerText = `${Math.round((i/total)*100)}%`;
+            }
+
+            setupFlip();
+            renderIndex();
+            document.getElementById('loading-overlay').style.display = 'none';
         }
 
-        function startFlipEngine() {
-            if (pageFlip) pageFlip.destroy();
-
-            // Logic: If isFullscreen is true, use Portrait (1 page) even on desktop
-            const usePortrait = isFullscreen || window.innerWidth < 1000;
-
+        function setupFlip() {
+            // FIX: size "fixed" and autoSize: false prevents the shaking on Desktop
             pageFlip = new St.PageFlip(document.getElementById('book-container'), {
-                width: 550, height: 800, size: "stretch", showCover: true,
-                usePortrait: usePortrait,
-                flippingTime: 1000,
-                mobileScrollSupport: true
+                width: 550,
+                height: 800,
+                size: "stretch",
+                minWidth: 315,
+                maxWidth: 1000,
+                minHeight: 420,
+                maxHeight: 1350,
+                drawShadow: true,
+                showCover: true,
+                mobileScrollSupport: true,
+                flippingTime: 800, // Faster flip = more stable look
+                usePortrait: false, // Forces double page spread on big screens
+                startPage: 0
             });
 
             pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+
             pageFlip.on('flip', (e) => {
-                document.getElementById('pageCurrent').innerText = e.data + 1;
-                if (isSoundEnabled) { flipSound.currentTime = 0; flipSound.play(); }
+                document.getElementById('pageDisplay').innerText = `${e.data + 1} / 52`;
+                if (soundEnabled) {
+                    flipSound.currentTime = 0;
+                    flipSound.play();
+                }
             });
+
             document.getElementById('book-container').style.visibility = 'visible';
         }
 
-        function handleCustomFullscreen() {
-            isFullscreen = !isFullscreen;
-            if (isFullscreen) {
-                document.body.classList.add('fullscreen-active');
-            } else {
-                document.body.classList.remove('fullscreen-active');
-            }
-            // Re-init engine to apply One-Page layout
-            startFlipEngine();
-        }
-
         function renderIndex() {
-            const list = document.getElementById('fullIndexList');
+            const list = document.getElementById('indexList');
             indexData.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
@@ -323,12 +327,14 @@
             });
         }
 
+        // Search Logic
         document.getElementById('searchInput').oninput = (e) => {
             const q = e.target.value.toLowerCase();
             const res = document.getElementById('searchResults');
             res.innerHTML = '';
-            if(q.length < 2) return;
-            indexData.filter(c => c.t.toLowerCase().includes(q)).forEach(item => {
+            if (q.length < 2) return;
+
+            indexData.filter(i => i.t.toLowerCase().includes(q)).forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `${item.t} <span>Pg ${item.p}</span>`;
@@ -337,23 +343,29 @@
             });
         };
 
+        // UI Helpers
         function togglePanel(id) {
             const p = document.getElementById(id);
-            const active = p.classList.contains('active');
+            const isAct = p.classList.contains('active');
             closePanels();
-            if(!active) p.classList.add('active');
+            if(!isAct) p.classList.add('active');
         }
 
         function closePanels() {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         }
 
-        document.getElementById('btnSound').onclick = function() {
-            isSoundEnabled = !isSoundEnabled;
-            this.innerHTML = isSoundEnabled ? '<i class="fas fa-volume-up"></i><span>Sound</span>' : '<i class="fas fa-volume-mute"></i><span>Mute</span>';
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        }
+
+        document.getElementById('soundToggle').onclick = function() {
+            soundEnabled = !soundEnabled;
+            this.innerHTML = soundEnabled ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
         };
 
-        window.onload = initApp;
+        window.onload = init;
     </script>
 </body>
 </html>
